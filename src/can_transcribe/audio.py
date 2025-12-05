@@ -14,6 +14,8 @@ def extract_audio_from_video(video_path: str) -> str:
         [
             "ffmpeg",
             "-y",
+            "-hwaccel",
+            "auto",  # Enable hardware acceleration (NVDEC/VAAPI/etc.)
             "-i",
             video_path,
             "-vn",

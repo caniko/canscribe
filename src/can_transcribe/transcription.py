@@ -1,4 +1,5 @@
 import os
+import re
 from collections.abc import Generator
 from pathlib import Path
 from typing import Iterator
@@ -11,10 +12,52 @@ from pyannote.audio.pipelines.utils.hook import ProgressHook
 from transformers import AutoProcessor, MoonshineForConditionalGeneration
 
 from .audio import get_audio_path
-from .config import MOONSHINE_MODEL, PYANNOTE_MODEL
+from .config import MOONSHINE_MODEL, PYANNOTE_MODEL, supports_flash_attention
 
 # Allow pyannote classes in torch.load for weights_only=True (PyTorch 2.6+)
 torch.serialization.add_safe_globals([Problem, Resolution, Specifications])
+
+
+def clean_repetitive_text(text: str, max_repeats: int = 3) -> str:
+    """
+    Clean up repetitive words/phrases that often appear in transcription artifacts.
+
+    Args:
+        text: The transcribed text to clean.
+        max_repeats: Maximum allowed consecutive repetitions of a word/phrase.
+
+    Returns:
+        Cleaned text with excessive repetitions reduced.
+    """
+    if not text:
+        return text
+
+    # Pattern to match a word/phrase repeated more than max_repeats times
+    # Matches: "word, word, word, word" or "word word word word" etc.
+    # Captures the repeated unit and replaces with max_repeats occurrences
+
+    # Handle comma-separated repetitions like "uh, uh, uh, uh, uh"
+    def reduce_comma_repeats(match: re.Match) -> str:
+        unit = match.group(1)
+        return ", ".join([unit.strip()] * max_repeats)
+
+    # Pattern for comma-separated repetitions (e.g., "uh, uh, uh, uh, uh")
+    comma_pattern = r'((?:\w+(?:\s+\w+)*)\s*,\s*)(?:\1){' + str(max_repeats) + r',}'
+    text = re.sub(comma_pattern, reduce_comma_repeats, text, flags=re.IGNORECASE)
+
+    # Handle space-separated repetitions like "I I I I I I"
+    def reduce_space_repeats(match: re.Match) -> str:
+        unit = match.group(1)
+        return " ".join([unit.strip()] * max_repeats)
+
+    # Pattern for space-separated single word repetitions
+    space_pattern = r'\b(\w+)(?:\s+\1){' + str(max_repeats) + r',}\b'
+    text = re.sub(space_pattern, reduce_space_repeats, text, flags=re.IGNORECASE)
+
+    # Clean up any resulting double spaces
+    text = re.sub(r'\s{2,}', ' ', text)
+
+    return text.strip()
 
 
 def save_transcript(
@@ -70,11 +113,17 @@ def transcribe_exclusive_speakers(
             raise RuntimeError(f"Failed to load diarization model: {diarization_model}")
         diarization_pipeline = diarization_pipeline.to(torch.device(discovered_device))
 
-        # 2. Load Transcription Model (Moonshine)
+        # 2. Load Transcription Model (Moonshine) with flash attention auto-detection
+        use_flash = supports_flash_attention()
+        if debug:
+            print(f"🔧 Flash Attention 2 enabled: {use_flash}")
+
         processor = AutoProcessor.from_pretrained(moonshine_model)
-        model = MoonshineForConditionalGeneration.from_pretrained(moonshine_model).to(
-            discovered_device
-        )
+        model = MoonshineForConditionalGeneration.from_pretrained(
+            moonshine_model,
+            attn_implementation="flash_attention_2" if use_flash else "sdpa",
+            dtype=torch.float16 if use_flash else torch.float32,
+        ).to(discovered_device)
 
         print("\U0001f50e Diarizing (Finding Dominant Speakers)...")
         with ProgressHook() as hook:
@@ -126,6 +175,9 @@ def transcribe_exclusive_speakers(
                     generated_ids = model.generate(**inputs)
 
                 text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
+
+                # Clean up repetitive artifacts from transcription
+                text = clean_repetitive_text(text)
 
                 if text:
                     yield {"start": start, "end": end, "speaker": speaker, "text": text}

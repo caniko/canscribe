@@ -10,21 +10,35 @@ dependencies = [
     "pyannote.audio",
     "torch",
     "torchaudio",
-    "transformers",
+    "torchvision",
+    "transformers>=4.57.0",
     "typer",
+    # Visual analysis
+    "insightface",
+    "scenedetect",  # opencv provided by Nix (opencv4Full with VAAPI)
+    "scikit-learn",
+    "onnxruntime-gpu",
+    "timm",  # For HuggingFace vision models
 ]
+
+[project.optional-dependencies]
+flash = ["flash-attn"]
 
 [project.scripts]
 ct = "can_transcribe.main:main"
 
 [[tool.uv.index]]
-name = "pytorch-cu130"
-url = "https://download.pytorch.org/whl/cu130"
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
 [tool.uv.sources]
-torch = { index = "pytorch-cu130" }
-torchaudio = { index = "pytorch-cu130" }
+torch = { index = "pytorch-cu128" }
+torchaudio = { index = "pytorch-cu128" }
+torchvision = { index = "pytorch-cu128" }
+
+[tool.uv.extra-build-dependencies]
+flash-attn = ["torch"]
 
 [dependency-groups]
 dev = [
