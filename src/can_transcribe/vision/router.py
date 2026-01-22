@@ -116,7 +116,7 @@ class FrameRouter:
 
         # Check for significant variation (speaking causes mouth movement)
         std_dev = np.std(history)
-        return std_dev > 2.0  # Threshold for "speaking" vs static
+        return bool(std_dev > 2.0)  # Threshold for "speaking" vs static
 
     def route(self, frame: np.ndarray) -> RoutingResult:
         """
