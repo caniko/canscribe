@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import torch
-import torchaudio
+import torchaudio  # type: ignore[import-untyped]
 from pyannote.audio import Pipeline
 from pyannote.audio.core.task import Problem, Resolution, Specifications
 from pyannote.audio.pipelines.utils.hook import ProgressHook

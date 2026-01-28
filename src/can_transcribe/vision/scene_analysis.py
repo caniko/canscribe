@@ -69,9 +69,11 @@ class SceneAnalyzer:
                     device_map="auto",
                 )
             else:
+                # Use float16 for GPU devices (CUDA/MPS), float32 for CPU
+                use_fp16 = self.device in ("cuda", "mps")
                 self._model = Qwen3VLForConditionalGeneration.from_pretrained(
                     self.model_name,
-                    dtype=torch.float16 if self.device == "cuda" else torch.float32,
+                    dtype=torch.float16 if use_fp16 else torch.float32,
                     attn_implementation="sdpa",
                     device_map="auto" if self.device == "cuda" else None,
                 )

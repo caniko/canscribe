@@ -6,7 +6,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from .config import MOONSHINE_MODEL, PYANNOTE_MODEL
+from .config import MOONSHINE_MODEL, PYANNOTE_MODEL, get_device
 from .transcription import transcribe_exclusive_speakers
 
 app = typer.Typer(
@@ -49,11 +49,12 @@ def transcribe(
     ] = False,
 ) -> None:
     """Transcribe an audio or video file with speaker diarization."""
-    if not cpu and not torch.cuda.is_available():
-        typer.echo("⚠️  CUDA not available, falling back to CPU", err=True)
-        cpu = True
-
-    device = "cpu" if cpu else "cuda"
+    if cpu:
+        device = "cpu"
+    else:
+        device = get_device()
+        if device == "cpu":
+            typer.echo("⚠️  No GPU available, using CPU", err=True)
 
     if visual:
         # Check if input is a video file
@@ -113,21 +114,23 @@ def check(
     torch_version = torch.__version__
     table.add_row("PyTorch", "✅", torch_version)
 
-    # --- CUDA ---
+    # --- GPU Backend ---
     if torch.cuda.is_available():
         gpu_name = torch.cuda.get_device_name(0)
         major, minor = torch.cuda.get_device_capability()
-        cuda_version = torch.version.cuda or "N/A"
+        cuda_version = torch.version.cuda or "N/A"  # type: ignore[attr-defined]
         table.add_row("CUDA", "✅", f"{cuda_version} ({gpu_name}, CC {major}.{minor})")
+    elif torch.backends.mps.is_available():
+        table.add_row("MPS (Apple)", "✅", "Metal Performance Shaders available")
     else:
-        table.add_row("CUDA", "⚠️", "Not available (CPU mode)")
+        table.add_row("GPU", "⚠️", "No GPU available (CPU mode)")
         all_ok = False
 
     # --- Flash Attention ---
     from .config import supports_flash_attention
     if supports_flash_attention():
         try:
-            import flash_attn
+            import flash_attn  # type: ignore[import-not-found]
             fa_version = getattr(flash_attn, "__version__", "unknown")
             table.add_row("Flash Attention", "✅", f"v{fa_version}")
         except ImportError:

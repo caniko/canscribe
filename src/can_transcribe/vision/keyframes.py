@@ -10,7 +10,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from scenedetect import detect, ContentDetector, AdaptiveDetector
+from scenedetect import detect, ContentDetector, AdaptiveDetector  # type: ignore[import-untyped]
 
 
 @dataclass
@@ -81,9 +81,9 @@ def extract_keyframes(
         # No scenes detected, sample uniformly
         timestamps = list(np.arange(0, duration, fallback_interval))
         for i, ts in enumerate(timestamps):
-            frame = _extract_frame_at(cap, ts, fps)
+            frame = _extract_frame_at(cap, float(ts), fps)
             if frame is not None:
-                keyframes.append(Keyframe(frame=frame, timestamp=ts, scene_index=i))
+                keyframes.append(Keyframe(frame=frame, timestamp=float(ts), scene_index=i))
     else:
         for i, (start, end) in enumerate(scene_list):
             start_sec = start.get_seconds()
@@ -105,10 +105,10 @@ def extract_keyframes(
                     fallback_interval,
                 )
                 for ts in intermediate_times:
-                    frame = _extract_frame_at(cap, ts, fps)
+                    frame = _extract_frame_at(cap, float(ts), fps)
                     if frame is not None:
                         keyframes.append(
-                            Keyframe(frame=frame, timestamp=ts, scene_index=i)
+                            Keyframe(frame=frame, timestamp=float(ts), scene_index=i)
                         )
 
     cap.release()

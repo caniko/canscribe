@@ -32,7 +32,26 @@ def supports_flash_attention() -> bool:
 
     # Check if the library is actually installed
     try:
-        import flash_attn  # noqa: F401
+        import flash_attn  # type: ignore[import-not-found]  # noqa: F401
         return True
     except ImportError:
         return False
+
+
+def get_device() -> str:
+    """
+    Auto-detect best available compute device.
+
+    Priority:
+    1. CUDA (NVIDIA GPUs)
+    2. MPS (Apple Silicon)
+    3. CPU (fallback)
+
+    Returns:
+        Device string: "cuda", "mps", or "cpu"
+    """
+    if torch.cuda.is_available():
+        return "cuda"
+    if torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"

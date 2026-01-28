@@ -11,7 +11,7 @@ from enum import Enum, auto
 
 import cv2
 import numpy as np
-from insightface.app import FaceAnalysis
+from insightface.app import FaceAnalysis  # type: ignore[import-untyped]
 
 
 class FrameType(Enum):

@@ -6,7 +6,12 @@
       "Bash(/data/can-data/Projects/solo/utils/can-transcribe/.venv/bin/python:*)",
       "Bash(/data/can-data/Projects/solo/utils/can-transcribe/.venv/bin/pip show pyright)",
       "Bash(/data/can-data/Projects/solo/utils/can-transcribe/.venv/bin/pip install pyright -q)",
-      "Bash(/data/can-data/Projects/solo/utils/can-transcribe/.venv/bin/pyright src/can_transcribe/)"
+      "Bash(/data/can-data/Projects/solo/utils/can-transcribe/.venv/bin/pyright src/can_transcribe/)",
+      "Bash(uv run pyright:*)",
+      "Bash(npx pyright)",
+      "Bash(uv lock:*)",
+      "Bash(uv sync:*)",
+      "Bash(nix flake check:*)"
     ]
   }
 }

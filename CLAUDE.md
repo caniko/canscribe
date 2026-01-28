@@ -8,11 +8,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Enter dev environment (installs deps, activates venv)
 nix develop
 
-# Sync dependencies
-uv sync
+# Sync dependencies (choose ONE platform extra)
+uv sync --extra nvidia        # NVIDIA CUDA 12.8
+uv sync --extra amd           # AMD ROCm 6.4 (Linux only)
+uv sync --extra apple         # Apple Silicon (MPS)
 
-# Install optional flash attention (requires CC 8.0+ GPU)
-uv sync --extra flash
+# Optional: Flash Attention for NVIDIA Ampere+ GPUs (CC 8.0+)
+uv sync --extra nvidia --extra flash
 
 # Run type checking
 uv run mypy .
@@ -73,7 +75,7 @@ This is an audio/video transcription CLI (`ct`) that combines speech-to-text wit
 ### Environment Requirements
 
 - Python 3.13
-- CUDA GPU recommended (falls back to CPU)
+- GPU recommended: NVIDIA (CUDA), AMD (ROCm), or Apple Silicon (MPS)
 - FFmpeg with hardware acceleration support
 - `HF_TOKEN` environment variable for pyannote model access
 - OpenCV provided by Nix (opencv4Full with VAAPI)

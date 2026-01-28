@@ -10,8 +10,8 @@ from dataclasses import dataclass, field
 import cv2
 import numpy as np
 import torch
-from insightface.app import FaceAnalysis
-from sklearn.cluster import DBSCAN
+from insightface.app import FaceAnalysis  # type: ignore[import-untyped]
+from sklearn.cluster import DBSCAN  # type: ignore[import-untyped]
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 
 

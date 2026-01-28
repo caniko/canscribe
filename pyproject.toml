@@ -1,50 +1,136 @@
 [project]
 name = "can-transcribe"
 version = "0.1.0"
-description = "Simple audio transcription CLI that uses cutting edge models 🤖"
+description = "Simple audio transcription CLI that uses cutting edge models"
 authors = [
     { name = "Can H. Tartanoglu", email = "gpg@rotas.mozmail.com" }
 ]
 requires-python = "==3.13.*"
+
+# Base dependencies (platform-agnostic, no PyTorch or onnxruntime)
 dependencies = [
     "pyannote.audio",
-    "torch",
-    "torchaudio",
-    "torchvision",
     "transformers>=4.57.0",
     "typer",
     # Visual analysis
     "insightface",
-    "scenedetect",  # opencv provided by Nix (opencv4Full with VAAPI)
+    "opencv-python-headless",  # Fallback; Nix provides opencv4 with VAAPI via PYTHONPATH
+    "scenedetect",
     "scikit-learn",
-    "onnxruntime-gpu",
     "timm",  # For HuggingFace vision models
 ]
 
 [project.optional-dependencies]
+# Platform extras (mutually exclusive)
+
+# NVIDIA CUDA 12.8 - Full GPU acceleration
+nvidia = [
+    "torch>=2.9.1",
+    "torchaudio>=2.9.1",
+    "torchvision>=0.24.1",
+    "onnxruntime-gpu",
+]
+
+# AMD ROCm 6.4 - Linux only
+amd = [
+    "torch>=2.9.1",
+    "torchaudio>=2.9.1",
+    "torchvision>=0.24.1",
+    "onnxruntime",
+    "pytorch-triton-rocm>=3.5.1 ; sys_platform == 'linux'",
+]
+
+# Apple Silicon - MPS acceleration built into PyPI wheels
+apple = [
+    "torch>=2.9.1",
+    "torchaudio>=2.9.1",
+    "torchvision>=0.24.1",
+    "onnxruntime",
+]
+
+# CPU only - No GPU acceleration (smaller download)
+cpu = [
+    "torch>=2.9.1",
+    "torchaudio>=2.9.1",
+    "torchvision>=0.24.1",
+    "onnxruntime",
+]
+
+# Flash Attention 2 - NVIDIA Ampere+ only (CC 8.0+)
 flash = ["flash-attn"]
 
 [project.scripts]
 ct = "can_transcribe.main:main"
 
+# ============================================================
+# UV Configuration
+# ============================================================
+
+[tool.uv]
+# Platform extras are mutually exclusive
+conflicts = [
+    [{ extra = "nvidia" }, { extra = "amd" }, { extra = "apple" }, { extra = "cpu" }],
+    [{ extra = "flash" }, { extra = "amd" }],
+    [{ extra = "flash" }, { extra = "apple" }],
+    [{ extra = "flash" }, { extra = "cpu" }],
+]
+
+# Index definitions
 [[tool.uv.index]]
 name = "pytorch-cu128"
 url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
+[[tool.uv.index]]
+name = "pytorch-rocm64"
+url = "https://download.pytorch.org/whl/rocm6.4"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+# Source routing by platform extra
 [tool.uv.sources]
-torch = { index = "pytorch-cu128" }
-torchaudio = { index = "pytorch-cu128" }
-torchvision = { index = "pytorch-cu128" }
+torch = [
+    { index = "pytorch-cu128", extra = "nvidia" },
+    { index = "pytorch-rocm64", extra = "amd" },
+    { index = "pytorch-cpu", extra = "cpu" },
+]
+torchaudio = [
+    { index = "pytorch-cu128", extra = "nvidia" },
+    { index = "pytorch-rocm64", extra = "amd" },
+    { index = "pytorch-cpu", extra = "cpu" },
+]
+torchvision = [
+    { index = "pytorch-cu128", extra = "nvidia" },
+    { index = "pytorch-rocm64", extra = "amd" },
+    { index = "pytorch-cpu", extra = "cpu" },
+]
+pytorch-triton-rocm = [
+    { index = "pytorch-rocm64", extra = "amd" },
+]
 
 [tool.uv.extra-build-dependencies]
 flash-attn = ["torch"]
 
+# ============================================================
+# Development & Build
+# ============================================================
+
 [dependency-groups]
 dev = [
     "mypy",
+    "pytest>=8.0",
 ]
 
 [build-system]
 requires = ["uv_build>=0.8.23,<0.9.0"]
 build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "integration: marks tests as integration tests (may require GPU, HF_TOKEN)",
+]
