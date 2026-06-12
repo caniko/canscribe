@@ -1,5 +1,5 @@
 [project]
-name = "can-transcribe"
+name = "canscribe"
 version = "0.1.0"
 description = "Simple audio transcription CLI that uses cutting edge models"
 authors = [
@@ -10,7 +10,14 @@ requires-python = "==3.13.*"
 # Base dependencies (platform-agnostic, no PyTorch or onnxruntime)
 dependencies = [
     "pyannote.audio",
-    "transformers>=4.57.0",
+    # torchcodec wheels don't declare their torch requirement; a mismatched
+    # pair aborts at import (op registration). 0.8.x pairs with torch 2.9.x —
+    # bump together with the torch pin below.
+    "torchcodec>=0.8,<0.9",
+    # parakeet-tdt ASR (nvidia/parakeet-tdt-0.6b-v3) needs the TDT decoder,
+    # which only landed in transformers 5.x.
+    "transformers>=5.0.0",
+    "librosa",  # required by transformers' ParakeetFeatureExtractor
     "typer",
     # Visual analysis
     "insightface",
@@ -60,7 +67,8 @@ cpu = [
 flash = ["flash-attn"]
 
 [project.scripts]
-ct = "can_transcribe.main:main"
+canscribe = "canscribe.main:main"
+ct = "canscribe.main:main"
 
 # ============================================================
 # UV Configuration
@@ -70,9 +78,6 @@ ct = "can_transcribe.main:main"
 # Platform extras are mutually exclusive
 conflicts = [
     [{ extra = "nvidia" }, { extra = "amd" }, { extra = "apple" }, { extra = "cpu" }],
-    [{ extra = "flash" }, { extra = "amd" }],
-    [{ extra = "flash" }, { extra = "apple" }],
-    [{ extra = "flash" }, { extra = "cpu" }],
 ]
 
 # Index definitions
@@ -123,6 +128,7 @@ flash-attn = ["torch"]
 dev = [
     "mypy",
     "pytest>=8.0",
+    "ruff",
 ]
 
 [build-system]
@@ -131,6 +137,13 @@ build-backend = "uv_build"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = ["-m", "not integration"]
 markers = [
     "integration: marks tests as integration tests (may require GPU, HF_TOKEN)",
+    "slow: marks tests as slow integration tests",
+]
+
+[tool.mypy]
+exclude = [
+    "^\\.venv/",
 ]

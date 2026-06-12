@@ -1,68 +1,256 @@
 {
-  description = "can-transcribe: Audio/video transcription CLI";
+  description = "canscribe: Audio/video transcription CLI";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
+    py-harbor = {
+      url = "git+https://codeberg.org/caniko/py-harbor.git";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    { nixpkgs, ... }:
+    {
+      self,
+      nixpkgs,
+      py-harbor,
+      ...
+    }:
     let
       inherit (nixpkgs) lib;
-      forAllSystems = lib.genAttrs lib.systems.flakeExposed;
-    in
-    {
-      devShells = forAllSystems (
-        system:
-        let
-          pkgs = import nixpkgs {
-            inherit system;
-            config.allowUnfree = true;
-          };
-          opencv = pkgs.python313Packages.opencv4;
+      py = py-harbor.lib;
 
-          # Base packages shared across all shells
+      mkRuntime =
+        pkgs:
+        let
+          ffmpeg = py.mkFfmpegCompat { inherit pkgs; };
+          opencv = pkgs.python313Packages.opencv4;
+        in
+        {
+          inherit ffmpeg opencv;
+
           basePackages = [
-            pkgs.python313
-            pkgs.uv
             pkgs.just
-            pkgs.ffmpeg-full
+            ffmpeg
             opencv
           ];
 
-          # Base libraries for LD_LIBRARY_PATH
           baseLibs = [
-            pkgs.ffmpeg-full
+            ffmpeg
             pkgs.stdenv.cc.cc.lib
             pkgs.dav1d
+            pkgs.libdrm
+            pkgs.libsndfile
+            pkgs.zlib # triton's _C extension
+            pkgs.zstd
             opencv
+          ]
+          ++ lib.optionals pkgs.stdenv.isLinux [
+            pkgs.libGL
+            pkgs.libxkbcommon
+            pkgs.xorg.libX11
+            pkgs.xorg.libXext
+            pkgs.xorg.libSM
+            pkgs.xorg.libICE
+            pkgs.xorg.libxcb
+          ];
+        };
+
+      mkSmokeCommand =
+        pkgs: runtime:
+        pkgs.writeShellApplication {
+          name = "canscribe-smoke";
+          runtimeInputs = [
+            pkgs.uv
+            runtime.ffmpeg
+          ];
+          text = ''
+            uv run --no-sync python - <<'PY'
+            import importlib.metadata as md
+            import os
+            import shutil
+            import subprocess
+            import sys
+            import torch
+
+            for package in ("torch", "torchaudio", "torchvision", "torchcodec"):
+                try:
+                    print(f"{package}: {md.version(package)}")
+                except md.PackageNotFoundError:
+                    print(f"{package}: MISSING")
+
+            ffmpeg = shutil.which("ffmpeg")
+            print(f"ffmpeg: {ffmpeg or 'MISSING'}")
+            if ffmpeg:
+                print(subprocess.run([ffmpeg, "-version"], check=False, capture_output=True, text=True).stdout.splitlines()[0])
+
+            gpu = torch.cuda.is_available()
+            backend = "none"
+            if gpu and getattr(torch.version, "hip", None):
+                backend = "rocm"
+            elif gpu and torch.version.cuda:
+                backend = "cuda"
+            elif gpu:
+                backend = "unknown-gpu"
+            elif torch.backends.mps.is_available():
+                backend = "mps"
+            print(f"torch gpu available: {gpu}")
+            print(f"backend: {backend}")
+            if gpu:
+                for index in range(torch.cuda.device_count()):
+                    props = torch.cuda.get_device_properties(index)
+                    arch = getattr(props, "gcnArchName", "unknown")
+                    gib = props.total_memory / 1024 ** 3
+                    print(f"device {index}: {torch.cuda.get_device_name(index)}; arch={arch}; memory={gib:.1f} GiB")
+                probe = subprocess.run(
+                    [
+                        sys.executable,
+                        "-c",
+                        "import torch; x=torch.ones((1,), device='cuda'); y=x + 1; torch.cuda.synchronize(); print(float(y.cpu()[0]))",
+                    ],
+                    env=os.environ.copy(),
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+                if probe.returncode == 0:
+                    print(f"gpu kernel probe: OK ({probe.stdout.strip()})")
+                else:
+                    stderr = probe.stderr.strip().splitlines()
+                    detail = f"returncode {probe.returncode}"
+                    if stderr:
+                        detail = f"{detail}; stderr: {stderr[-1]}"
+                    print(f"gpu kernel probe: FAIL ({detail})")
+                    raise SystemExit(1)
+            PY
+          '';
+        };
+
+      mkPyprojectOverrides =
+        {
+          pkgs,
+          python,
+          runtime,
+        }:
+        final: prev: {
+          insightface = prev.insightface.overrideAttrs (old: {
+            nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
+              final.setuptools
+              final.numpy
+              final.cython
+            ];
+          });
+          numba = prev.numba.overrideAttrs (old: {
+            buildInputs = (old.buildInputs or [ ]) ++ [
+              pkgs.tbb
+            ];
+          });
+          julius = py.pythonOverrides.addSetuptools final prev "julius";
+          torchaudio = py.pythonOverrides.addTorchRuntime python final prev "torchaudio";
+          torchcodec = py.pythonOverrides.addTorchCodecFfmpegRuntime {
+            inherit python;
+            ffmpeg = runtime.ffmpeg;
+          } final prev;
+          torchvision = py.pythonOverrides.addTorchRuntime python final prev "torchvision";
+        };
+
+      mkDevShells =
+        system:
+        let
+          pkgs = py.mkPkgs { inherit system; };
+          python = pkgs.python313;
+          runtime = mkRuntime pkgs;
+          isX86Linux = system == "x86_64-linux";
+          isAarch64Darwin = system == "aarch64-darwin";
+          smokeCommand = mkSmokeCommand pkgs runtime;
+
+          # Diagnostic tools only. The ROCm PyTorch wheel bundles its own ROCm
+          # userspace; exposing nixpkgs ROCm libs via LD_LIBRARY_PATH (or clr's
+          # setup hook exporting HIP_DEVICE_LIB_PATH) shadows the wheel's
+          # runtime with an incompatible version and segfaults on first kernel
+          # launch. Keep clr/rocm-runtime out of the shell.
+          rocmTools = with pkgs.rocmPackages; [
+            rocminfo
+            rocm-smi
           ];
 
-          # Shell factory
           mkDevShell =
             {
+              uvExtra,
               extraPackages ? [ ],
               extraLibs ? [ ],
               extraEnv ? { },
-              uvExtra,
             }:
-            pkgs.mkShell {
-              packages = basePackages ++ extraPackages;
-
-              env = {
-                LD_LIBRARY_PATH = lib.makeLibraryPath (baseLibs ++ extraLibs);
-              } // extraEnv;
-
-              shellHook = ''
-                export PYTHONPATH="${opencv}/${pkgs.python313.sitePackages}''${PYTHONPATH:+:$PYTHONPATH}"
-                uv sync --extra ${uvExtra}
-                . .venv/bin/activate
-              '';
+            let
+              uvFlags = "--extra ${uvExtra} --group dev";
+              helperPackages = [
+                (py.mkUvHelper {
+                  inherit pkgs;
+                  name = "canscribe-sync";
+                  command = "sync ${uvFlags}";
+                })
+                (py.mkUvHelper {
+                  inherit pkgs;
+                  name = "canscribe-test";
+                  command = "run ${uvFlags} pytest";
+                })
+                (py.mkUvHelper {
+                  inherit pkgs;
+                  name = "canscribe-test-live";
+                  command = "run ${uvFlags} pytest -m 'integration and not slow'";
+                })
+                (py.mkUvHelper {
+                  inherit pkgs;
+                  name = "canscribe-typecheck";
+                  command = "run ${uvFlags} mypy .";
+                })
+                smokeCommand
+              ];
+            in
+            py.mkUvDevShell {
+              inherit
+                pkgs
+                python
+                uvExtra
+                helperPackages
+                extraEnv
+                ;
+              basePackages = runtime.basePackages;
+              extraPackages = extraPackages;
+              baseLibs = runtime.baseLibs;
+              extraLibs = extraLibs;
+              pythonPathEntries = [ "${runtime.opencv}/${python.sitePackages}" ];
             };
+
+          cpuShell = mkDevShell {
+            uvExtra = "cpu";
+          };
+
+          appleShell = mkDevShell {
+            uvExtra = "apple";
+          };
         in
         {
-          # NVIDIA CUDA (x86_64-linux only)
+          cpu = cpuShell;
+          default = if isAarch64Darwin then appleShell else cpuShell;
+        }
+        // lib.optionalAttrs isAarch64Darwin {
+          apple = appleShell;
+        }
+        // lib.optionalAttrs isX86Linux {
+          amd = mkDevShell {
+            uvExtra = "amd";
+            extraPackages = rocmTools;
+            extraEnv = {
+              ROCR_VISIBLE_DEVICES = "0";
+              HIP_VISIBLE_DEVICES = "0";
+              CUDA_VISIBLE_DEVICES = "0";
+            };
+          };
+
           nvidia = mkDevShell {
+            uvExtra = "nvidia";
             extraPackages = [
               pkgs.cudaPackages.cuda_cudart
               pkgs.cudaPackages.cuda_nvcc
@@ -79,48 +267,126 @@
             extraEnv = {
               CUDA_HOME = "${pkgs.cudaPackages.cuda_nvcc}";
             };
-            uvExtra = "nvidia";
           };
+        };
 
-          # AMD ROCm (x86_64-linux only)
-          amd = mkDevShell {
-            extraPackages = [
-              pkgs.rocmPackages.clr
-              pkgs.rocmPackages.rocm-smi
+      mkPythonPackage =
+        system:
+        let
+          pkgs = py.mkPkgs { inherit system; };
+          python = pkgs.python313;
+          runtime = mkRuntime pkgs;
+          cpuDependencySpec = {
+            canscribe = [ "cpu" ];
+          };
+        in
+        py.mkUvAppPackage {
+          inherit pkgs python;
+          name = "canscribe-cpu";
+          envName = "canscribe-cpu-env";
+          workspaceRoot = ./.;
+          dependencies = cpuDependencySpec;
+          scripts = [
+            "canscribe"
+            "ct"
+          ];
+          runtimePathPackages = [ runtime.ffmpeg ];
+          runtimeLibraryPackages = runtime.baseLibs;
+          pyprojectOverrides = mkPyprojectOverrides { inherit pkgs python runtime; };
+        };
+
+      mkPythonCheckEnv =
+        system:
+        let
+          pkgs = py.mkPkgs { inherit system; };
+          python = pkgs.python313;
+          runtime = mkRuntime pkgs;
+          checkDependencySpec = {
+            canscribe = [
+              "cpu"
+              "dev"
             ];
-            extraLibs = [
-              pkgs.rocmPackages.clr
-            ];
-            extraEnv = {
-              HSA_OVERRIDE_GFX_VERSION = "11.0.0"; # Adjust for your GPU
-            };
-            uvExtra = "amd";
           };
+        in
+        py.mkUvCheckEnv {
+          inherit pkgs python;
+          name = "canscribe-cpu-check-env";
+          workspaceRoot = ./.;
+          dependencies = checkDependencySpec;
+          pyprojectOverrides = mkPyprojectOverrides { inherit pkgs python runtime; };
+        };
 
-          # Apple Silicon (aarch64-darwin)
-          apple = mkDevShell {
-            extraPackages = [ ];
-            extraLibs = [ ];
-            extraEnv = { };
-            uvExtra = "apple";
+      mkChecks =
+        system:
+        let
+          pkgs = py.mkPkgs { inherit system; };
+          runtime = mkRuntime pkgs;
+          canscribe = self.packages.${system}.canscribe-cpu;
+          checkEnv = mkPythonCheckEnv system;
+          ffmpegAbiCheck = py.mkFfmpegTorchCodecAbiCheck {
+            inherit pkgs;
+            ffmpeg = runtime.ffmpeg;
+            name = "canscribe-ffmpeg-torchcodec-abi-check";
           };
+        in
+        {
+          flake-eval = pkgs.runCommand "canscribe-flake-eval" { } ''
+            test -x ${canscribe}/bin/canscribe
+            test -x ${runtime.ffmpeg}/bin/ffmpeg
+            test -e ${ffmpegAbiCheck}/result
+            mkdir -p $out
+            echo ok > $out/result
+          '';
 
-          # CPU only (no GPU acceleration, smaller download)
-          cpu = mkDevShell {
-            extraPackages = [ ];
-            extraLibs = [ ];
-            extraEnv = { };
-            uvExtra = "cpu";
-          };
+          offline-tests = pkgs.runCommand "canscribe-offline-tests" { } ''
+            export HOME=$TMPDIR/home
+            export XDG_CACHE_HOME=$TMPDIR/cache
+            export LD_LIBRARY_PATH=${lib.makeLibraryPath runtime.baseLibs}
+            mkdir -p "$HOME" "$XDG_CACHE_HOME" "$out"
+            cd ${./.}
+            ${checkEnv}/bin/python -m pytest -p no:cacheprovider
+            echo ok > $out/result
+          '';
 
-          # Default: CPU shell
-          default = mkDevShell {
-            extraPackages = [ ];
-            extraLibs = [ ];
-            extraEnv = { };
-            uvExtra = "cpu";
-          };
+          typecheck = pkgs.runCommand "canscribe-typecheck" { } ''
+            export HOME=$TMPDIR/home
+            export XDG_CACHE_HOME=$TMPDIR/cache
+            export LD_LIBRARY_PATH=${lib.makeLibraryPath runtime.baseLibs}
+            mkdir -p "$HOME" "$XDG_CACHE_HOME" "$out"
+            cd ${./.}
+            ${checkEnv}/bin/python -m mypy .
+            echo ok > $out/result
+          '';
+        };
+    in
+    {
+      devShells = py.forAllSystems mkDevShells;
+
+      packages = py.forPackageSystems (
+        system:
+        let
+          canscribeCpu = mkPythonPackage system;
+        in
+        {
+          canscribe-cpu = canscribeCpu;
+          default = canscribeCpu;
         }
       );
+
+      apps = py.forPackageSystems (
+        system:
+        let
+          canscribeCpu = self.packages.${system}.canscribe-cpu;
+        in
+        {
+          canscribe-cpu = {
+            type = "app";
+            program = "${canscribeCpu}/bin/canscribe";
+          };
+          default = self.apps.${system}.canscribe-cpu;
+        }
+      );
+
+      checks = py.forPackageSystems mkChecks;
     };
 }
