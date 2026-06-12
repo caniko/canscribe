@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents when working with code in this repository.
 
 ## Build and Development Commands
 
@@ -23,17 +23,17 @@ uv run mypy .
 uv run ruff format .
 
 # Run the CLI
-ct <audio-or-video-file>
+canscribe <audio-or-video-file>
 
 # Run system diagnostics
-ct check [video-file]
+canscribe check [video-file]
 ```
 
 ## Architecture Overview
 
-This is an audio/video transcription CLI (`ct`) that combines speech-to-text with speaker diarization and optional visual analysis.
+This is an audio/video transcription CLI (`canscribe`, with `ct` as a compatibility alias) that combines speech-to-text with speaker diarization and optional visual analysis.
 
-### Core Pipeline (`src/can_transcribe/`)
+### Core Pipeline (`src/canscribe/`)
 
 **Entry Point**: `main.py` - Typer CLI with two commands:
 - `transcribe` (default): Main transcription with optional `--visual` mode
@@ -43,7 +43,7 @@ This is an audio/video transcription CLI (`ct`) that combines speech-to-text wit
 1. `audio.py` - Extracts audio from video via FFmpeg (hardware-accelerated)
 2. `transcription.py` - Main transcription pipeline:
    - Pyannote diarization → speaker segments
-   - Moonshine ASR → text per segment
+   - Parakeet ASR by default, Moonshine compatibility backend → text per segment
    - Streams results to `transcript-<filename>.txt`
 
 **Visual Analysis Flow** (enabled with `--visual`):
@@ -53,7 +53,7 @@ This is an audio/video transcription CLI (`ct`) that combines speech-to-text wit
    - `STATIC_FACE`: Face without movement → face analysis
    - `NO_FACE`: No faces → VLM scene description
 3. `vision/face_analysis.py` - InsightFace embeddings + HuggingFace emotion detection
-4. `vision/scene_analysis.py` - Qwen3-VL-2B-Thinking for scene descriptions
+4. `vision/scene_analysis.py` - Qwen3-VL-4B-Instruct for scene descriptions
 
 ### Key Design Patterns
 
@@ -66,11 +66,12 @@ This is an audio/video transcription CLI (`ct`) that combines speech-to-text wit
 
 | Component | Model | Purpose |
 |-----------|-------|---------|
-| ASR | `UsefulSensors/moonshine-tiny` | Speech-to-text |
+| ASR | `nvidia/parakeet-tdt-0.6b-v3` | Default speech-to-text |
+| ASR compatibility | `UsefulSensors/moonshine-tiny` | Lightweight legacy speech-to-text |
 | Diarization | `pyannote/speaker-diarization-community-1` | Speaker identification |
 | Face Detection | InsightFace `buffalo_sc` (router) / `buffalo_l` (analysis) | Face routing and embeddings |
 | Emotion | `dima806/facial_emotions_image_detection` | Emotion classification |
-| Scene VLM | `Qwen/Qwen3-VL-2B-Thinking` | Non-face frame descriptions |
+| Scene VLM | `Qwen/Qwen3-VL-4B-Instruct` | Non-face frame descriptions |
 
 ### Environment Requirements
 
