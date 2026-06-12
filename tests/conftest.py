@@ -1,9 +1,10 @@
-"""Pytest fixtures for can-transcribe integration tests."""
+"""Pytest fixtures for canscribe integration tests."""
 
 from __future__ import annotations
 
 import os
 import subprocess
+import sys
 import tempfile
 from collections.abc import Generator
 from pathlib import Path
@@ -16,15 +17,37 @@ BOBBY_VIDEO = Path(__file__).parent.parent / "bobby.mp4"
 # Clip timing: 7:31-9:24 in seconds
 CLIP_START_SECONDS = 7 * 60 + 31  # 451 seconds
 CLIP_DURATION_SECONDS = (9 * 60 + 24) - CLIP_START_SECONDS  # 113 seconds
+SMOKE_CLIP_DURATION_SECONDS = 12
 
 
-def has_cuda() -> bool:
-    """Check if CUDA is available."""
+def has_torch_gpu() -> bool:
+    """Check if PyTorch exposes a GPU device.
+
+    ROCm/HIP builds expose AMD GPUs through the torch.cuda API, so this covers
+    both CUDA and ROCm backends.
+    """
     try:
         import torch
+
         return torch.cuda.is_available()
-    except ImportError:
+    except Exception:
         return False
+
+
+def gpu_backend_name() -> str:
+    """Return the active PyTorch GPU backend name for diagnostics."""
+    try:
+        import torch
+    except Exception:
+        return "none"
+
+    if not torch.cuda.is_available():
+        return "none"
+    if getattr(torch.version, "hip", None):
+        return "rocm"
+    if torch.version.cuda:
+        return "cuda"
+    return "unknown-gpu"
 
 
 def has_hf_token() -> bool:
@@ -38,35 +61,42 @@ def pyannote_audio_decoder_works() -> bool:
     pyannote.audio 4.x has a bug where AudioDecoder may not be defined
     if torchcodec/FFmpeg libraries are not properly installed.
     """
-    try:
-        # This import triggers the AudioDecoder check
-        from pyannote.audio.core.io import get_audio_metadata
-        # Try to verify AudioDecoder is defined in the module
-        import pyannote.audio.core.io as io_module
-        return hasattr(io_module, 'AudioDecoder') or 'AudioDecoder' in dir(io_module)
-    except Exception:
-        return False
+    probe = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import pyannote.audio.core.io as io_module; "
+                "raise SystemExit(0 if hasattr(io_module, 'AudioDecoder') else 1)"
+            ),
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+        timeout=30,
+    )
+    return probe.returncode == 0
 
 
 # Skip markers for GPU-required tests
-requires_cuda = pytest.mark.skipif(
-    not has_cuda(),
-    reason="CUDA not available"
+requires_torch_gpu = pytest.mark.skipif(
+    not has_torch_gpu(), reason="PyTorch GPU backend not available"
 )
 
+requires_cuda = requires_torch_gpu
+
 requires_hf_token = pytest.mark.skipif(
-    not has_hf_token(),
-    reason="HF_TOKEN environment variable not set"
+    not has_hf_token(), reason="HF_TOKEN environment variable not set"
 )
 
 requires_gpu_and_token = pytest.mark.skipif(
-    not has_cuda() or not has_hf_token(),
-    reason="Requires CUDA and HF_TOKEN"
+    not has_torch_gpu() or not has_hf_token(),
+    reason="Requires PyTorch GPU backend and HF_TOKEN",
 )
 
 requires_pyannote_audio_decoder = pytest.mark.skipif(
     not pyannote_audio_decoder_works(),
-    reason="pyannote.audio AudioDecoder not available (torchcodec/FFmpeg issue)"
+    reason="pyannote.audio AudioDecoder not available (torchcodec/FFmpeg issue)",
 )
 
 
@@ -90,7 +120,7 @@ def bobby_clip(bobby_video_path: Path) -> Generator[Path, None, None]:
     The clip is cached for the entire test session.
     """
     # Create a temporary file that persists for the session
-    temp_dir = tempfile.mkdtemp(prefix="can_transcribe_test_")
+    temp_dir = tempfile.mkdtemp(prefix="canscribe_test_")
     clip_path = Path(temp_dir) / "bobby_clip.mp4"
 
     # Extract clip using ffmpeg
@@ -98,10 +128,14 @@ def bobby_clip(bobby_video_path: Path) -> Generator[Path, None, None]:
         [
             "ffmpeg",
             "-y",  # Overwrite output file if exists
-            "-ss", str(CLIP_START_SECONDS),  # Start time
-            "-i", str(bobby_video_path),  # Input file
-            "-t", str(CLIP_DURATION_SECONDS),  # Duration
-            "-c", "copy",  # Copy streams without re-encoding (fast)
+            "-ss",
+            str(CLIP_START_SECONDS),  # Start time
+            "-i",
+            str(bobby_video_path),  # Input file
+            "-t",
+            str(CLIP_DURATION_SECONDS),  # Duration
+            "-c",
+            "copy",  # Copy streams without re-encoding (fast)
             str(clip_path),
         ],
         capture_output=True,
@@ -119,7 +153,38 @@ def bobby_clip(bobby_video_path: Path) -> Generator[Path, None, None]:
 
     # Cleanup after all tests
     import shutil
+
     shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+@pytest.fixture
+def bobby_smoke_clip(bobby_video_path: Path, tmp_path: Path) -> Path:
+    """Extract a short clip for live model smoke tests."""
+    clip_path = tmp_path / "bobby_smoke_clip.mp4"
+    result = subprocess.run(
+        [
+            "ffmpeg",
+            "-y",
+            "-ss",
+            str(CLIP_START_SECONDS),
+            "-i",
+            str(bobby_video_path),
+            "-t",
+            str(SMOKE_CLIP_DURATION_SECONDS),
+            "-c",
+            "copy",
+            str(clip_path),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+
+    if result.returncode != 0:
+        pytest.fail(f"Failed to extract smoke clip: {result.stderr}")
+    if not clip_path.exists():
+        pytest.fail(f"Smoke clip file not created: {clip_path}")
+    return clip_path
 
 
 @pytest.fixture

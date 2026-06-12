@@ -1,5 +1,5 @@
 """
-Scene analysis module using Qwen3-VL-2B-Thinking.
+Scene analysis module using Qwen3-VL-Instruct.
 
 Provides general visual descriptions for frames without speaking faces,
 such as screen shares, presentations, or environment shots.
@@ -25,7 +25,7 @@ class SceneDescription:
 
 class SceneAnalyzer:
     """
-    Analyzes video frames/segments using Qwen3-VL-2B-Thinking.
+    Analyzes video frames/segments using Qwen3-VL-Instruct.
 
     Features:
     - Native video support with timestamp alignment
@@ -59,7 +59,9 @@ class SceneAnalyzer:
     def model(self):
         """Lazy-load Qwen3-VL model."""
         if self._model is None:
-            print(f"🔧 Loading {self.model_name} (Flash Attention: {self._use_flash})...")
+            print(
+                f"🔧 Loading {self.model_name} (Flash Attention: {self._use_flash})..."
+            )
 
             if self._use_flash:
                 self._model = Qwen3VLForConditionalGeneration.from_pretrained(
@@ -147,7 +149,7 @@ class SceneAnalyzer:
 
         # Decode, removing input tokens
         generated_ids_trimmed = [
-            out_ids[len(in_ids):]
+            out_ids[len(in_ids) :]
             for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
         ]
         output_text = self.processor.batch_decode(
@@ -232,7 +234,7 @@ class SceneAnalyzer:
 
         # Decode
         generated_ids_trimmed = [
-            out_ids[len(in_ids):]
+            out_ids[len(in_ids) :]
             for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
         ]
         output_text = self.processor.batch_decode(

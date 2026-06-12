@@ -50,7 +50,9 @@ class FrameRouter:
         self.device = device
         self.detection_threshold = detection_threshold
         self._face_app: FaceAnalysis | None = None
-        self._prev_mouth_heights: dict[int, list[float]] = {}  # Track mouth movement per face
+        self._prev_mouth_heights: dict[
+            int, list[float]
+        ] = {}  # Track mouth movement per face
 
     @property
     def face_app(self) -> FaceAnalysis:

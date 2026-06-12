@@ -1,11 +1,14 @@
-# --- CONFIGURATION ---
 import torch
 
 VIDEO_EXTENSIONS = {".mp4", ".mkv", ".avi", ".mov", ".webm", ".flv", ".wmv"}
 
+PARAKEET_MODEL = "nvidia/parakeet-tdt-0.6b-v3"
 MOONSHINE_MODEL = "UsefulSensors/moonshine-tiny"
 PYANNOTE_MODEL = "pyannote/speaker-diarization-community-1"
-QWEN3_VL_MODEL = "Qwen/Qwen3-VL-2B-Thinking"
+QWEN3_VL_MODEL = "Qwen/Qwen3-VL-4B-Instruct"
+
+DEFAULT_ASR_BACKEND = "parakeet"
+DEFAULT_DIARIZATION_BACKEND = "pyannote-community"
 
 
 def supports_flash_attention() -> bool:
@@ -33,9 +36,19 @@ def supports_flash_attention() -> bool:
     # Check if the library is actually installed
     try:
         import flash_attn  # type: ignore[import-not-found]  # noqa: F401
+
         return True
     except ImportError:
         return False
+
+
+def get_attention_config(device: str) -> tuple[str, torch.dtype]:
+    """Return a conservative attention implementation and dtype for Transformers."""
+    if device == "cuda" and supports_flash_attention():
+        return "flash_attention_2", torch.float16
+    if device in {"cuda", "mps"}:
+        return "sdpa", torch.float16
+    return "sdpa", torch.float32
 
 
 def get_device() -> str:

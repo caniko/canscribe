@@ -83,7 +83,9 @@ def extract_keyframes(
         for i, ts in enumerate(timestamps):
             frame = _extract_frame_at(cap, float(ts), fps)
             if frame is not None:
-                keyframes.append(Keyframe(frame=frame, timestamp=float(ts), scene_index=i))
+                keyframes.append(
+                    Keyframe(frame=frame, timestamp=float(ts), scene_index=i)
+                )
     else:
         for i, (start, end) in enumerate(scene_list):
             start_sec = start.get_seconds()

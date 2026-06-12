@@ -185,9 +185,9 @@ class FaceAnalyzer:
             rgb_crop = cv2.cvtColor(face_crop, cv2.COLOR_BGR2RGB)
 
             # Process for model
-            inputs = self.emotion_processor(
-                images=rgb_crop, return_tensors="pt"
-            ).to(self.device)
+            inputs = self.emotion_processor(images=rgb_crop, return_tensors="pt").to(
+                self.device
+            )
 
             # Inference
             with torch.no_grad():
@@ -243,7 +243,7 @@ class FaceAnalyzer:
             w, h = x2 - x1, y2 - y1
 
             # Crop face for emotion detection
-            face_crop = frame[max(0, y1):y2, max(0, x1):x2]
+            face_crop = frame[max(0, y1) : y2, max(0, x1) : x2]
             if face_crop.size == 0:
                 continue
 

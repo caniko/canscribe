@@ -1,1 +1,1 @@
-# Integration tests for can-transcribe
+# Integration tests for canscribe

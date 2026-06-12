@@ -12,10 +12,14 @@ import pytest
 
 from tests.conftest import requires_gpu_and_token, requires_pyannote_audio_decoder
 
+pytestmark = [pytest.mark.integration, pytest.mark.slow]
+
 
 @requires_gpu_and_token
 @requires_pyannote_audio_decoder
-def test_transcribe_bobby_clip_produces_transcript(bobby_clip: Path, temp_output_dir: Path) -> None:
+def test_transcribe_bobby_clip_produces_transcript(
+    bobby_clip: Path, temp_output_dir: Path
+) -> None:
     """
     Test that transcription produces a transcript file.
 
@@ -24,7 +28,7 @@ def test_transcribe_bobby_clip_produces_transcript(bobby_clip: Path, temp_output
     - Transcript file is created
     - Transcript file contains content
     """
-    from can_transcribe.transcription import transcribe_exclusive_speakers
+    from canscribe.transcription import transcribe_exclusive_speakers
 
     # Copy clip to temp directory so transcript is created there
     test_clip = temp_output_dir / "bobby_clip.mp4"
@@ -33,7 +37,8 @@ def test_transcribe_bobby_clip_produces_transcript(bobby_clip: Path, temp_output
     # Run transcription
     transcribe_exclusive_speakers(
         audio_file=str(test_clip),
-        device="cuda",
+        speaker_count=3,
+        device="auto",
         debug=False,
     )
 
@@ -52,21 +57,20 @@ def test_transcribe_bobby_clip_produces_transcript(bobby_clip: Path, temp_output
     # Check at least one line has expected format: [X.XXs - Y.YYs] SPEAKER_XX: text
     timestamp_pattern = re.compile(r"\[\d+\.\d+s - \d+\.\d+s\] SPEAKER_\d+: .+")
     valid_lines = [line for line in lines if timestamp_pattern.match(line)]
-    assert len(valid_lines) > 0, f"No valid transcript lines found. Sample line: {lines[0]}"
+    assert len(valid_lines) > 0, (
+        f"No valid transcript lines found. Sample line: {lines[0]}"
+    )
 
 
 @requires_gpu_and_token
 @requires_pyannote_audio_decoder
-def test_transcribe_bobby_identifies_three_speakers(bobby_clip: Path, temp_output_dir: Path) -> None:
+def test_transcribe_bobby_identifies_three_speakers(
+    bobby_clip: Path, temp_output_dir: Path
+) -> None:
     """
-    Test that diarization identifies approximately 3 speakers.
-
-    The clip has 3 main speakers with some background laughing.
-    We allow 2-4 speakers to account for:
-    - Background laughter potentially being detected as a speaker
-    - Diarization uncertainty with overlapping speech
+    Test that diarization honors the known 3-speaker count.
     """
-    from can_transcribe.transcription import transcribe_exclusive_speakers
+    from canscribe.transcription import transcribe_exclusive_speakers
 
     # Copy clip to temp directory
     test_clip = temp_output_dir / "bobby_clip.mp4"
@@ -75,7 +79,8 @@ def test_transcribe_bobby_identifies_three_speakers(bobby_clip: Path, temp_outpu
     # Run transcription
     transcribe_exclusive_speakers(
         audio_file=str(test_clip),
-        device="cuda",
+        speaker_count=3,
+        device="auto",
         debug=False,
     )
 
@@ -88,15 +93,14 @@ def test_transcribe_bobby_identifies_three_speakers(bobby_clip: Path, temp_outpu
     speakers = set(speaker_pattern.findall(content))
     unique_speaker_count = len(speakers)
 
-    # Assert 2-4 speakers (tolerance for background laughing and diarization variance)
-    assert 2 <= unique_speaker_count <= 4, (
-        f"Expected 2-4 speakers, found {unique_speaker_count}: {speakers}"
-    )
+    assert unique_speaker_count == 3, f"Expected 3 speakers, found {speakers}"
 
 
 @requires_gpu_and_token
 @requires_pyannote_audio_decoder
-def test_transcribe_bobby_segment_coverage(bobby_clip: Path, temp_output_dir: Path) -> None:
+def test_transcribe_bobby_segment_coverage(
+    bobby_clip: Path, temp_output_dir: Path
+) -> None:
     """
     Test that transcript segments cover the majority of the clip duration.
 
@@ -104,7 +108,7 @@ def test_transcribe_bobby_segment_coverage(bobby_clip: Path, temp_output_dir: Pa
     by checking that the total transcribed duration is reasonable relative
     to the clip length (113 seconds).
     """
-    from can_transcribe.transcription import transcribe_exclusive_speakers
+    from canscribe.transcription import transcribe_exclusive_speakers
 
     # Copy clip to temp directory
     test_clip = temp_output_dir / "bobby_clip.mp4"
@@ -113,7 +117,8 @@ def test_transcribe_bobby_segment_coverage(bobby_clip: Path, temp_output_dir: Pa
     # Run transcription
     transcribe_exclusive_speakers(
         audio_file=str(test_clip),
-        device="cuda",
+        speaker_count=3,
+        device="auto",
         debug=False,
     )
 
