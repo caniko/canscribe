@@ -1,0 +1,29 @@
+[flake]
+scope = "full"
+mode = "custom"
+backend = "py-harbor"
+
+[flake.expected_outputs]
+packages = [
+  "canscribe-cpu",
+  "docs",
+  "site",
+]
+apps = ["canscribe-cpu"]
+dev_shells = [
+  "cpu",
+  "docs",
+  "nvidia",
+  "amd",
+  "apple",
+  "site",
+]
+checks = [
+  "flake-eval",
+  "offline-tests",
+  "typecheck",
+]
+
+[ci]
+runtime = "nix"
+runner = "atlas"

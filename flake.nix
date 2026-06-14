@@ -8,6 +8,14 @@
       url = "git+https://codeberg.org/caniko/py-harbor.git";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    plinth = {
+      url = "git+https://codeberg.org/caniko/plinth";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    treefmt-nix.url = "github:numtide/treefmt-nix";
+    git-hooks.url = "github:cachix/git-hooks.nix";
   };
 
   outputs =
@@ -15,6 +23,9 @@
       self,
       nixpkgs,
       py-harbor,
+      plinth,
+      treefmt-nix,
+      git-hooks,
       ...
     }:
     let
@@ -164,6 +175,14 @@
           isX86Linux = system == "x86_64-linux";
           isAarch64Darwin = system == "aarch64-darwin";
           smokeCommand = mkSmokeCommand pkgs runtime;
+          treefmtEval = treefmt-nix.lib.evalModule pkgs (import ./nix/treefmt.nix);
+          pre-commit-check = git-hooks.lib.${system}.run {
+            src = ./.;
+            hooks = import ./nix/pre-commit.nix {
+              inherit pkgs;
+              treefmtWrapper = treefmtEval.config.build.wrapper;
+            };
+          };
 
           # Diagnostic tools only. The ROCm PyTorch wheel bundles its own ROCm
           # userspace; exposing nixpkgs ROCm libs via LD_LIBRARY_PATH (or clr's
@@ -216,11 +235,12 @@
                 helperPackages
                 extraEnv
                 ;
-              basePackages = runtime.basePackages;
-              extraPackages = extraPackages;
+              basePackages = runtime.basePackages ++ [ pkgs.mdbook ];
+              extraPackages = pre-commit-check.enabledPackages ++ extraPackages;
               baseLibs = runtime.baseLibs;
               extraLibs = extraLibs;
               pythonPathEntries = [ "${runtime.opencv}/${python.sitePackages}" ];
+              shellHookSuffix = pre-commit-check.shellHook;
             };
 
           cpuShell = mkDevShell {
@@ -232,6 +252,17 @@
           };
         in
         {
+          docs = pkgs.mkShell {
+            packages = [ pkgs.mdbook ];
+          };
+
+          site = pkgs.mkShell {
+            packages = [
+              pkgs.mdbook
+              plinth.packages.${system}.plinth-project
+            ];
+          };
+
           cpu = cpuShell;
           default = if isAarch64Darwin then appleShell else cpuShell;
         }
@@ -323,6 +354,7 @@
           runtime = mkRuntime pkgs;
           canscribe = self.packages.${system}.canscribe-cpu;
           checkEnv = mkPythonCheckEnv system;
+          treefmtEval = treefmt-nix.lib.evalModule pkgs (import ./nix/treefmt.nix);
           ffmpegAbiCheck = py.mkFfmpegTorchCodecAbiCheck {
             inherit pkgs;
             ffmpeg = runtime.ffmpeg;
@@ -337,6 +369,8 @@
             mkdir -p $out
             echo ok > $out/result
           '';
+
+          formatting = treefmtEval.config.build.check self;
 
           offline-tests = pkgs.runCommand "canscribe-offline-tests" { } ''
             export HOME=$TMPDIR/home
@@ -358,6 +392,65 @@
             echo ok > $out/result
           '';
         };
+
+      mkDocs =
+        system:
+        let
+          pkgs = py.mkPkgs { inherit system; };
+        in
+        pkgs.stdenvNoCC.mkDerivation {
+          pname = "canscribe-docs";
+          version = "0.1.0";
+          src = lib.fileset.toSource {
+            root = ./.;
+            fileset = lib.fileset.maybeMissing ./docs;
+          };
+          nativeBuildInputs = [ pkgs.mdbook ];
+          phases = [
+            "buildPhase"
+            "installPhase"
+          ];
+          buildPhase = ''
+            cp -r --no-preserve=mode $src/docs docs
+            mdbook build docs
+          '';
+          installPhase = ''
+            cp -r docs/book $out
+          '';
+        };
+
+      mkSite =
+        system:
+        let
+          pkgs = py.mkPkgs { inherit system; };
+          docs = self.packages.${system}.docs;
+          plinthProject = plinth.packages.${system}.plinth-project;
+        in
+        pkgs.stdenvNoCC.mkDerivation {
+          pname = "canscribe-site";
+          version = "0.1.0";
+          src = lib.fileset.toSource {
+            root = ./.;
+            fileset = lib.fileset.unions [
+              (lib.fileset.maybeMissing ./website)
+            ];
+          };
+          nativeBuildInputs = [ plinthProject ];
+          phases = [
+            "buildPhase"
+            "installPhase"
+          ];
+          buildPhase = ''
+            cp -r --no-preserve=mode $src/website website
+            plinth-project build --config website/plinth-project.toml --out public
+          '';
+          installPhase = ''
+            mkdir -p $out
+            cp -r public/. $out/
+            mkdir -p $out/docs
+            cp -r ${docs}/. $out/docs/
+          '';
+        };
     in
     {
       devShells = py.forAllSystems mkDevShells;
@@ -369,6 +462,8 @@
         in
         {
           canscribe-cpu = canscribeCpu;
+          docs = mkDocs system;
+          site = mkSite system;
           default = canscribeCpu;
         }
       );
@@ -385,6 +480,15 @@
           };
           default = self.apps.${system}.canscribe-cpu;
         }
+      );
+
+      formatter = py.forAllSystems (
+        system:
+        let
+          pkgs = py.mkPkgs { inherit system; };
+          treefmtEval = treefmt-nix.lib.evalModule pkgs (import ./nix/treefmt.nix);
+        in
+        treefmtEval.config.build.wrapper
       );
 
       checks = py.forPackageSystems mkChecks;
