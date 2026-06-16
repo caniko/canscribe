@@ -26,6 +26,12 @@ conflicts = [[
     { package = "canscribe", extra = "nvidia" },
 ]]
 
+[manifest]
+members = [
+    "canscribe",
+    "torching",
+]
+
 [[package]]
 name = "aiohappyeyeballs"
 version = "2.6.1"
@@ -241,6 +247,7 @@ dependencies = [
     { name = "scikit-learn" },
     { name = "timm" },
     { name = "torchcodec" },
+    { name = "torching" },
     { name = "transformers" },
     { name = "typer" },
 ]
@@ -309,6 +316,7 @@ requires-dist = [
     { name = "torchaudio", marker = "extra == 'cpu'", specifier = ">=2.9.1", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "canscribe", extra = "cpu" } },
     { name = "torchaudio", marker = "extra == 'nvidia'", specifier = ">=2.9.1", index = "https://download.pytorch.org/whl/cu128", conflict = { package = "canscribe", extra = "nvidia" } },
     { name = "torchcodec", specifier = ">=0.8,<0.9" },
+    { name = "torching", editable = "src/torching" },
     { name = "torchvision", marker = "extra == 'amd'", specifier = ">=0.24.1", index = "https://download.pytorch.org/whl/rocm6.4", conflict = { package = "canscribe", extra = "amd" } },
     { name = "torchvision", marker = "extra == 'apple'", specifier = ">=0.24.1" },
     { name = "torchvision", marker = "extra == 'cpu'", specifier = ">=0.24.1", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "canscribe", extra = "cpu" } },
@@ -2950,6 +2958,17 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/0a/49/f92dbcde288823f7478afe707d6194ba52d149025760a4c86bbc2886eeff/torchcodec-0.8.1-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:7c3a4694387be17f9bc4a031443f734a44ebba2f889d6379e3503ab49bc4c2af", size = 1958891, upload-time = "2025-10-28T09:46:43.798Z" },
     { url = "https://files.pythonhosted.org/packages/fc/7c/01634d181910ef904c806b1c409e0632695885340ef79e60afd3eede91af/torchcodec-0.8.1-cp313-cp313-win_amd64.whl", hash = "sha256:eceacd3246aff417f484194c796b569dffef6f1156347418c51b0d8b9f94e31d", size = 2107715, upload-time = "2025-10-28T09:47:07.17Z" },
 ]
+
+[[package]]
+name = "torching"
+version = "0.1.0"
+source = { editable = "src/torching" }
+dependencies = [
+    { name = "typer" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "typer" }]
 
 [[package]]
 name = "torchmetrics"

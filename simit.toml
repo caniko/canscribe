@@ -22,8 +22,10 @@ checks = [
   "flake-eval",
   "offline-tests",
   "typecheck",
+  "uv-format",
 ]
 
 [ci]
 runtime = "nix"
 runner = "atlas"
+with_pypi_publish = true

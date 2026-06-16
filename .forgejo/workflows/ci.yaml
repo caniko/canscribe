@@ -35,3 +35,6 @@ jobs:
 
       - name: Build check typecheck
         run: nix build .#checks.x86_64-linux.typecheck
+
+      - name: Build check uv-format
+        run: nix build .#checks.x86_64-linux.uv-format

@@ -391,6 +391,15 @@
             ${checkEnv}/bin/python -m mypy .
             echo ok > $out/result
           '';
+
+          uv-format = pkgs.runCommand "canscribe-uv-format" { } ''
+            export HOME=$TMPDIR/home
+            export XDG_CACHE_HOME=$TMPDIR/cache
+            mkdir -p "$HOME" "$XDG_CACHE_HOME" "$out"
+            cd ${./.}
+            ${checkEnv}/bin/uv run --no-sync ruff format --check .
+            echo ok > $out/result
+          '';
         };
 
       mkDocs =

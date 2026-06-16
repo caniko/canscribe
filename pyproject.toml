@@ -10,6 +10,7 @@ requires-python = "==3.13.*"
 # Base dependencies (platform-agnostic, no PyTorch or onnxruntime)
 dependencies = [
     "pyannote.audio",
+    "torching>=0.1.0",
     # torchcodec wheels don't declare their torch requirement; a mismatched
     # pair aborts at import (op registration). 0.8.x pairs with torch 2.9.x —
     # bump together with the torch pin below.
@@ -74,6 +75,9 @@ ct = "canscribe.main:main"
 # UV Configuration
 # ============================================================
 
+[tool.uv.workspace]
+members = ["src/torching"]
+
 [tool.uv]
 # Platform extras are mutually exclusive
 conflicts = [
@@ -116,6 +120,7 @@ torchvision = [
 pytorch-triton-rocm = [
     { index = "pytorch-rocm64", extra = "amd" },
 ]
+torching = { workspace = true }
 
 [tool.uv.extra-build-dependencies]
 flash-attn = ["torch"]
