@@ -16,6 +16,7 @@ from .config import (
     PYANNOTE_MODEL,
     VIDEO_EXTENSIONS,
     get_device,
+    silence_stderr,
     supports_flash_attention,
 )
 from .types import AsrBackendName, BackendSetupError
@@ -86,6 +87,14 @@ def transcribe(
     debug: Annotated[
         bool,
         typer.Option("--debug", help="Print transcript lines as they are written"),
+    ] = False,
+    resume: Annotated[
+        bool,
+        typer.Option(
+            "--resume",
+            "-r",
+            help="Resume a partial transcript from existing output file",
+        ),
     ] = False,
 ) -> None:
     """Transcribe an audio or video file with speaker diarization."""
@@ -240,6 +249,31 @@ def check(
     console.print(table)
 
     if not all_ok:
+        raise typer.Exit(1)
+
+
+@app.command()
+def doctor(
+    verbose: Annotated[
+        bool,
+        typer.Option("--verbose", "-v", help="Show explanations and fix suggestions"),
+    ] = False,
+    probe: Annotated[
+        bool,
+        typer.Option(
+            "--probe",
+            "-p",
+            help="Run a GPU kernel probe to check runtime behavior (requires torch + GPU)",
+        ),
+    ] = False,
+) -> None:
+    """Run deep environment diagnostics (library paths, env vars, GPU libs)."""
+    from torching.main import print_results, run_checks
+
+    results = run_checks(probe=probe)
+    print_results(results, verbose=verbose)
+    has_fail = any(r.status == "FAIL" for r in results)
+    if has_fail:
         raise typer.Exit(1)
 
 
