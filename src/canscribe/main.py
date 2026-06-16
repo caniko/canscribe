@@ -155,7 +155,9 @@ def check(
     table.add_row("Python", "OK", sys.version.split()[0])
     table.add_row("PyTorch", "OK", torch.__version__)
 
-    if torch.cuda.is_available():
+    with silence_stderr():
+        cuda_available = torch.cuda.is_available()
+    if cuda_available:
         gpu_name = torch.cuda.get_device_name(0)
         props = torch.cuda.get_device_properties(0)
         major, minor = torch.cuda.get_device_capability()

@@ -1,3 +1,6 @@
+import os
+from contextlib import contextmanager
+
 import torch
 
 VIDEO_EXTENSIONS = {".mp4", ".mkv", ".avi", ".mov", ".webm", ".flv", ".wmv"}
@@ -9,6 +12,27 @@ QWEN3_VL_MODEL = "Qwen/Qwen3-VL-4B-Instruct"
 
 DEFAULT_ASR_BACKEND = "parakeet"
 DEFAULT_DIARIZATION_BACKEND = "pyannote-community"
+
+
+@contextmanager
+def silence_stderr():
+    """Temporarily redirect C-level stderr to /dev/null.
+
+    The ROCm-bundled libdrm_amdgpu.so prints a harmless but noisy
+    message to stderr when it fails to open its hardcoded path
+    /opt/amdgpu/share/libdrm/amdgpu.ids on Nix systems.
+    This silences it during the first GPU probe, which is the only
+    time the message appears.
+    """
+    devnull = os.open(os.devnull, os.O_WRONLY)
+    saved = os.dup(2)
+    os.dup2(devnull, 2)
+    os.close(devnull)
+    try:
+        yield
+    finally:
+        os.dup2(saved, 2)
+        os.close(saved)
 
 
 def supports_flash_attention() -> bool:
@@ -24,8 +48,9 @@ def supports_flash_attention() -> bool:
         True if Flash Attention 2 can be used, False otherwise.
     """
     # Check if we have a GPU
-    if not torch.cuda.is_available():
-        return False
+    with silence_stderr():
+        if not torch.cuda.is_available():
+            return False
 
     # Check GPU architecture (Ampere or newer required)
     # Flash Attn 2 requires Compute Capability 8.0+
@@ -63,8 +88,9 @@ def get_device() -> str:
     Returns:
         Device string: "cuda", "mps", or "cpu"
     """
-    if torch.cuda.is_available():
-        return "cuda"
+    with silence_stderr():
+        if torch.cuda.is_available():
+            return "cuda"
     if torch.backends.mps.is_available():
         return "mps"
     return "cpu"
