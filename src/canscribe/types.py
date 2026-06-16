@@ -64,6 +64,7 @@ class TranscriptionRequest:
     visual: bool = False
     output_path: Path | str | None = None
     debug: bool = False
+    resume: bool = False
     min_segment_duration: float = 0.2
 
     def resolved_input_path(self) -> Path:

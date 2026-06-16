@@ -115,6 +115,7 @@ def transcribe(
             device=device,
             visual=visual,
             debug=debug,
+            resume=resume,
         )
     except BackendSetupError as exc:
         typer.echo(str(exc), err=True)

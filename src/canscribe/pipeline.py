@@ -23,7 +23,12 @@ from .config import (
     VIDEO_EXTENSIONS,
     get_device,
 )
-from .formatting import save_transcript
+from .formatting import (
+    append_segment,
+    default_transcript_path,
+    read_transcript_end_time,
+    save_transcript,
+)
 from .types import (
     BackendSetupError,
     TranscriptSegment,
@@ -71,6 +76,19 @@ class TranscriptionPipeline:
         )
 
         audio_path, temp_audio_file = get_audio_path(str(input_path))
+
+        # Resolve output path early so we can resume
+        resolved_output = (
+            Path(normalized_request.output_path)
+            if normalized_request.output_path is not None
+            else default_transcript_path(input_path)
+        )
+        processed_until: float = 0.0
+        if normalized_request.resume:
+            processed_until = read_transcript_end_time(resolved_output)
+            if processed_until > 0:
+                print(f"Resuming from {processed_until:.2f}s")
+
         try:
             diarization_segments, warnings = diarization_backend.diarize(
                 audio_path,
@@ -92,20 +110,29 @@ class TranscriptionPipeline:
                 else {}
             )
 
+            total = len(segments)
             transcript_segments: list[TranscriptSegment] = []
-            for segment in segments:
-                start_sample = max(0, int(segment.start * sample_rate))
-                end_sample = max(start_sample, int(segment.end * sample_rate))
-                audio_chunk = waveform[start_sample:end_sample]
-                if audio_chunk.numel() == 0:
-                    continue
+            prev_time = processed_until
+            skipped = 0
 
-                asr_result = asr_backend.transcribe_chunk(audio_chunk, sample_rate)
-                if not asr_result.text:
-                    continue
+            open_mode = "a" if processed_until > 0 else "w"
+            with resolved_output.open(open_mode, encoding="utf-8") as handle:
+                for idx, segment in enumerate(segments):
+                    if segment.end <= processed_until:
+                        skipped += 1
+                        continue
 
-                transcript_segments.append(
-                    TranscriptSegment(
+                    start_sample = max(0, int(segment.start * sample_rate))
+                    end_sample = max(start_sample, int(segment.end * sample_rate))
+                    audio_chunk = waveform[start_sample:end_sample]
+                    if audio_chunk.numel() == 0:
+                        continue
+
+                    asr_result = asr_backend.transcribe_chunk(audio_chunk, sample_rate)
+                    if not asr_result.text:
+                        continue
+
+                    ts = TranscriptSegment(
                         start=segment.start,
                         end=segment.end,
                         speaker=segment.speaker,
@@ -113,14 +140,15 @@ class TranscriptionPipeline:
                         words=asr_result.words,
                         **visual_context.get((segment.speaker, segment.start), {}),
                     )
-                )
+                    transcript_segments.append(ts)
 
-            output_path = save_transcript(
-                transcript_segments,
-                input_path,
-                output_path=normalized_request.resolved_output_path(),
-                debug=normalized_request.debug,
-            )
+                    append_segment(handle, ts, debug=normalized_request.debug)
+                    progress_pct = (idx + 1 - skipped) / max(total - skipped, 1) * 100
+                    if normalized_request.debug:
+                        print(
+                            f"  [{progress_pct:5.1f}%] segment {idx + 1}/{total} "
+                            f"({ts.start:.1f}s - {ts.end:.1f}s)",
+                        )
 
             backend_metadata = {
                 "asr_backend": asr_backend.name,
@@ -130,10 +158,12 @@ class TranscriptionPipeline:
                 "device": device,
             }
             backend_metadata.update(_speaker_count_metadata(normalized_request))
+            if processed_until > 0:
+                backend_metadata["resumed_from"] = f"{processed_until:.2f}s"
 
             return TranscriptionResult(
                 segments=tuple(transcript_segments),
-                output_path=output_path,
+                output_path=resolved_output,
                 backend_metadata=backend_metadata,
                 warnings=warnings,
             )
