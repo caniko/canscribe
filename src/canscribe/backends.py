@@ -10,6 +10,7 @@ import torch
 import torchaudio  # type: ignore[import-untyped]
 
 from .config import (
+    ASR_MAX_NEW_TOKENS,
     MOONSHINE_MODEL,
     PARAKEET_MODEL,
     PYANNOTE_MODEL,
@@ -133,14 +134,17 @@ class ParakeetAsrBackend:
                 output = self.pipeline(
                     {"array": audio_array, "sampling_rate": sample_rate},
                     return_timestamps="word",
+                    max_new_tokens=ASR_MAX_NEW_TOKENS,
                 )
             except TypeError:
                 output = self.pipeline(
-                    {"array": audio_array, "sampling_rate": sample_rate}
+                    {"array": audio_array, "sampling_rate": sample_rate},
+                    max_new_tokens=ASR_MAX_NEW_TOKENS,
                 )
             except ValueError:
                 output = self.pipeline(
-                    {"array": audio_array, "sampling_rate": sample_rate}
+                    {"array": audio_array, "sampling_rate": sample_rate},
+                    max_new_tokens=ASR_MAX_NEW_TOKENS,
                 )
 
         if isinstance(output, str):
@@ -208,7 +212,9 @@ class MoonshineAsrBackend:
             return_tensors="pt",
         ).to(self.device)
         with torch.inference_mode():
-            generated_ids = self.model.generate(**inputs)
+            generated_ids = self.model.generate(
+                **inputs, max_new_tokens=ASR_MAX_NEW_TOKENS
+            )
         text = self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
         return AsrResult(text=clean_repetitive_text(text.strip()))
 
