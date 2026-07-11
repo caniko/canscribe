@@ -5,7 +5,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     py-harbor = {
-      url = "git+https://codeberg.org/caniko/py-harbor.git";
+      url = "git+https://codeberg.org/caniko/py-harbor.git?ref=trunk";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
