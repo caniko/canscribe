@@ -27,5 +27,5 @@ checks = [
 
 [ci]
 runtime = "nix"
-runner = "atlas"
+runner = "atlas-nix-trusted"
 with_pypi_publish = true
