@@ -27,5 +27,12 @@ checks = [
 
 [ci]
 runtime = "nix"
-runner = "atlas-nix-trusted"
+runner = "codeberg-medium"
 with_pypi_publish = true
+provider = "actions"
+platform = "forgejo"
+
+[ci.pages]
+repo = "caniko/canscribe"
+token_secret = "CODEBERG_TOKEN"
+source_branch = "mvp"

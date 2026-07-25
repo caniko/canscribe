@@ -11,11 +11,10 @@ concurrency:
 
 jobs:
   publish:
-    runs-on: atlas
+    runs-on: codeberg-medium
     env:
       NIX_CONFIG: "experimental-features = nix-command flakes"
       XDG_CACHE_HOME: "/tmp/.cache"
-      CARGO_HOME: "/tmp/.cargo"
     steps:
       - name: Checkout
         uses: https://code.forgejo.org/actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
