@@ -1,24 +1,17 @@
 from __future__ import annotations
 
 import os
-from dataclasses import replace
 from pathlib import Path
-
-import torch
 
 from .audio import get_audio_path
 from .backends import (
     AsrBackend,
     DiarizationBackend,
+    PyannoteCommunityBackend,
     create_asr_backend,
-    create_diarization_backend,
     load_mono_audio,
 )
 from .config import (
-    DEFAULT_ASR_BACKEND,
-    DEFAULT_DIARIZATION_BACKEND,
-    MOONSHINE_MODEL,
-    PARAKEET_MODEL,
     PYANNOTE_MODEL,
     VIDEO_EXTENSIONS,
     get_device,
@@ -27,10 +20,10 @@ from .formatting import (
     append_segment,
     default_transcript_path,
     read_transcript_end_time,
-    save_transcript,
 )
 from .types import (
     BackendSetupError,
+    DiarizationSegment,
     TranscriptSegment,
     TranscriptionRequest,
     TranscriptionResult,
@@ -50,28 +43,19 @@ class TranscriptionPipeline:
         self._diarization_backend = diarization_backend
 
     def run(self, request: TranscriptionRequest) -> TranscriptionResult:
-        input_path = request.resolved_input_path()
+        input_path = Path(request.input_path)
         if request.visual and input_path.suffix.lower() not in VIDEO_EXTENSIONS:
             raise BackendSetupError("Visual analysis requires a video input file.")
         _validate_speaker_count_options(request)
 
         device = _resolve_device(request.device)
-        asr_model = request.asr_model or _default_asr_model(request.asr_backend)
-        diarization_model = request.diarization_model or PYANNOTE_MODEL
-        normalized_request = replace(
-            request,
-            asr_model=asr_model,
-            diarization_model=diarization_model,
-        )
-
         asr_backend = self._asr_backend or create_asr_backend(
-            normalized_request.asr_backend,
-            model_name=asr_model,
+            request.asr_backend,
+            model_name=request.asr_model,
             device=device,
         )
-        diarization_backend = self._diarization_backend or create_diarization_backend(
-            normalized_request.diarization_backend,
-            model_name=diarization_model,
+        diarization_backend = self._diarization_backend or PyannoteCommunityBackend(
+            request.diarization_model or PYANNOTE_MODEL,
             device=device,
         )
 
@@ -79,12 +63,12 @@ class TranscriptionPipeline:
 
         # Resolve output path early so we can resume
         resolved_output = (
-            Path(normalized_request.output_path)
-            if normalized_request.output_path is not None
+            Path(request.output_path)
+            if request.output_path is not None
             else default_transcript_path(input_path)
         )
         processed_until: float = 0.0
-        if normalized_request.resume:
+        if request.resume:
             processed_until = read_transcript_end_time(resolved_output)
             if processed_until > 0:
                 print(f"Resuming from {processed_until:.2f}s")
@@ -92,27 +76,25 @@ class TranscriptionPipeline:
         try:
             diarization_segments, warnings = diarization_backend.diarize(
                 audio_path,
-                speaker_count=normalized_request.speaker_count,
-                min_speakers=normalized_request.min_speakers,
-                max_speakers=normalized_request.max_speakers,
+                speaker_count=request.speaker_count,
+                min_speakers=request.min_speakers,
+                max_speakers=request.max_speakers,
             )
             waveform, sample_rate = load_mono_audio(audio_path)
 
             segments = [
                 segment
                 for segment in diarization_segments
-                if segment.end - segment.start
-                >= normalized_request.min_segment_duration
+                if segment.end - segment.start >= request.min_segment_duration
             ]
             visual_context = (
                 _build_visual_context(str(input_path), segments, device)
-                if normalized_request.visual
+                if request.visual
                 else {}
             )
 
             total = len(segments)
             transcript_segments: list[TranscriptSegment] = []
-            prev_time = processed_until
             skipped = 0
 
             open_mode = "a" if processed_until > 0 else "w"
@@ -137,14 +119,13 @@ class TranscriptionPipeline:
                         end=segment.end,
                         speaker=segment.speaker,
                         text=asr_result.text,
-                        words=asr_result.words,
                         **visual_context.get((segment.speaker, segment.start), {}),
                     )
                     transcript_segments.append(ts)
 
-                    append_segment(handle, ts, debug=normalized_request.debug)
+                    append_segment(handle, ts, debug=request.debug)
                     progress_pct = (idx + 1 - skipped) / max(total - skipped, 1) * 100
-                    if normalized_request.debug:
+                    if request.debug:
                         print(
                             f"  [{progress_pct:5.1f}%] segment {idx + 1}/{total} "
                             f"({ts.start:.1f}s - {ts.end:.1f}s)",
@@ -157,7 +138,7 @@ class TranscriptionPipeline:
                 "diarization_model": diarization_backend.model_name,
                 "device": device,
             }
-            backend_metadata.update(_speaker_count_metadata(normalized_request))
+            backend_metadata.update(_speaker_count_metadata(request))
             if processed_until > 0:
                 backend_metadata["resumed_from"] = f"{processed_until:.2f}s"
 
@@ -220,67 +201,43 @@ def _resolve_device(policy: str) -> str:
     )
 
 
-def _default_asr_model(backend: str) -> str:
-    if backend == DEFAULT_ASR_BACKEND:
-        return PARAKEET_MODEL
-    if backend == "moonshine":
-        return MOONSHINE_MODEL
-    raise BackendSetupError(
-        f"Unknown ASR backend '{backend}'. Expected one of: parakeet, moonshine."
-    )
-
-
 def _build_visual_context(
     video_file: str,
-    segments: list,
+    segments: list[DiarizationSegment],
     device: str,
 ) -> dict[tuple[str, float], dict[str, str]]:
     from .vision import (
         FaceAnalyzer,
-        FrameRouter,
         SceneAnalyzer,
         extract_frames_at_timestamps,
     )
-    from .vision.router import FrameType
 
     midpoints = [(segment.start + segment.end) / 2 for segment in segments]
-    keyframes = extract_frames_at_timestamps(video_file, midpoints)
-    keyframe_map = {keyframe.timestamp: keyframe for keyframe in keyframes}
+    frames = extract_frames_at_timestamps(video_file, midpoints)
 
-    router = FrameRouter(device=device)
     face_analyzer = FaceAnalyzer(device=device)
-    scene_analyzer = SceneAnalyzer(device=device)
+    scene_analyzer: SceneAnalyzer | None = None
     speaker_face_map: dict[str, str] = {}
     context: dict[tuple[str, float], dict[str, str]] = {}
 
-    try:
-        for segment, timestamp in zip(segments, midpoints):
-            keyframe = keyframe_map.get(timestamp)
-            if keyframe is None:
-                continue
+    for segment, timestamp in zip(segments, midpoints):
+        frame = frames.get(timestamp)
+        if frame is None:
+            continue
 
-            routing = router.route(keyframe.frame)
-            segment_context: dict[str, str] = {}
+        face_results = face_analyzer.analyze_faces(frame)
+        segment_context: dict[str, str] = {}
 
-            if routing.frame_type in (FrameType.SPEAKING_FACE, FrameType.STATIC_FACE):
-                face_results = face_analyzer.analyze_faces(
-                    keyframe.frame,
-                    predetected_faces=routing.faces,
-                )
-                if face_results:
-                    main_face = max(
-                        face_results, key=lambda face: face.bbox[2] * face.bbox[3]
-                    )
-                    speaker_face_map.setdefault(segment.speaker, main_face.face_id)
-                    segment_context["face_id"] = speaker_face_map[segment.speaker]
-                    segment_context["emotion"] = main_face.emotion
-            elif routing.frame_type == FrameType.NO_FACE:
-                scene_result = scene_analyzer.describe_frame(keyframe.frame, timestamp)
-                segment_context["visual_description"] = scene_result.description
+        if face_results:
+            main_face = max(face_results, key=lambda face: face.bbox[2] * face.bbox[3])
+            speaker_face_map.setdefault(segment.speaker, main_face.face_id)
+            segment_context["face_id"] = speaker_face_map[segment.speaker]
+            segment_context["emotion"] = main_face.emotion
+        else:
+            if scene_analyzer is None:
+                scene_analyzer = SceneAnalyzer(device=device)
+            segment_context["visual_description"] = scene_analyzer.describe_frame(frame)
 
-            if segment_context:
-                context[(segment.speaker, segment.start)] = segment_context
-        return context
-    finally:
-        router.reset_tracking()
-        face_analyzer.reset()
+        context[(segment.speaker, segment.start)] = segment_context
+
+    return context

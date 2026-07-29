@@ -11,16 +11,6 @@ from canscribe.types import BackendSetupError, TranscriptionResult
 runner = CliRunner()
 
 
-def test_cli_rejects_visual_mode_for_audio_input(tmp_path: Path) -> None:
-    audio_path = tmp_path / "sample.wav"
-    audio_path.write_bytes(b"not a wav")
-
-    result = runner.invoke(app, ["transcribe", str(audio_path), "--visual"])
-
-    assert result.exit_code == 1
-    assert "Visual analysis requires a video file." in result.stderr
-
-
 def test_cli_prints_backend_setup_errors(tmp_path: Path, monkeypatch) -> None:
     audio_path = tmp_path / "sample.wav"
     audio_path.write_bytes(b"not a wav")

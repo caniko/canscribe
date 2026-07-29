@@ -5,8 +5,6 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
-import tempfile
-from collections.abc import Generator
 from pathlib import Path
 
 import pytest
@@ -32,22 +30,6 @@ def has_torch_gpu() -> bool:
         return torch.cuda.is_available()
     except Exception:
         return False
-
-
-def gpu_backend_name() -> str:
-    """Return the active PyTorch GPU backend name for diagnostics."""
-    try:
-        import torch
-    except Exception:
-        return "none"
-
-    if not torch.cuda.is_available():
-        return "none"
-    if getattr(torch.version, "hip", None):
-        return "rocm"
-    if torch.version.cuda:
-        return "cuda"
-    return "unknown-gpu"
 
 
 def has_hf_token() -> bool:
@@ -78,17 +60,6 @@ def pyannote_audio_decoder_works() -> bool:
     return probe.returncode == 0
 
 
-# Skip markers for GPU-required tests
-requires_torch_gpu = pytest.mark.skipif(
-    not has_torch_gpu(), reason="PyTorch GPU backend not available"
-)
-
-requires_cuda = requires_torch_gpu
-
-requires_hf_token = pytest.mark.skipif(
-    not has_hf_token(), reason="HF_TOKEN environment variable not set"
-)
-
 requires_gpu_and_token = pytest.mark.skipif(
     not has_torch_gpu() or not has_hf_token(),
     reason="Requires PyTorch GPU backend and HF_TOKEN",
@@ -109,7 +80,7 @@ def bobby_video_path() -> Path:
 
 
 @pytest.fixture(scope="session")
-def bobby_clip(bobby_video_path: Path) -> Generator[Path, None, None]:
+def bobby_clip(bobby_video_path: Path, tmp_path_factory) -> Path:
     """
     Extract a 113-second clip (7:31-9:24) from bobby.mp4 to a temporary file.
 
@@ -119,75 +90,38 @@ def bobby_clip(bobby_video_path: Path) -> Generator[Path, None, None]:
 
     The clip is cached for the entire test session.
     """
-    # Create a temporary file that persists for the session
-    temp_dir = tempfile.mkdtemp(prefix="canscribe_test_")
-    clip_path = Path(temp_dir) / "bobby_clip.mp4"
-
-    # Extract clip using ffmpeg
-    result = subprocess.run(
-        [
-            "ffmpeg",
-            "-y",  # Overwrite output file if exists
-            "-ss",
-            str(CLIP_START_SECONDS),  # Start time
-            "-i",
-            str(bobby_video_path),  # Input file
-            "-t",
-            str(CLIP_DURATION_SECONDS),  # Duration
-            "-c",
-            "copy",  # Copy streams without re-encoding (fast)
-            str(clip_path),
-        ],
-        capture_output=True,
-        text=True,
-        timeout=60,
-    )
-
-    if result.returncode != 0:
-        pytest.fail(f"Failed to extract clip: {result.stderr}")
-
-    if not clip_path.exists():
-        pytest.fail(f"Clip file not created: {clip_path}")
-
-    yield clip_path
-
-    # Cleanup after all tests
-    import shutil
-
-    shutil.rmtree(temp_dir, ignore_errors=True)
+    clip_path = tmp_path_factory.mktemp("canscribe") / "bobby_clip.mp4"
+    _extract_clip(bobby_video_path, clip_path, CLIP_DURATION_SECONDS)
+    return clip_path
 
 
 @pytest.fixture
 def bobby_smoke_clip(bobby_video_path: Path, tmp_path: Path) -> Path:
     """Extract a short clip for live model smoke tests."""
     clip_path = tmp_path / "bobby_smoke_clip.mp4"
-    result = subprocess.run(
+    _extract_clip(bobby_video_path, clip_path, SMOKE_CLIP_DURATION_SECONDS)
+    return clip_path
+
+
+def _extract_clip(source: Path, destination: Path, duration: int) -> None:
+    subprocess.run(
         [
             "ffmpeg",
             "-y",
             "-ss",
             str(CLIP_START_SECONDS),
             "-i",
-            str(bobby_video_path),
+            str(source),
             "-t",
-            str(SMOKE_CLIP_DURATION_SECONDS),
+            str(duration),
             "-c",
             "copy",
-            str(clip_path),
+            str(destination),
         ],
         capture_output=True,
         text=True,
         timeout=60,
+        check=True,
     )
-
-    if result.returncode != 0:
-        pytest.fail(f"Failed to extract smoke clip: {result.stderr}")
-    if not clip_path.exists():
-        pytest.fail(f"Smoke clip file not created: {clip_path}")
-    return clip_path
-
-
-@pytest.fixture
-def temp_output_dir(tmp_path: Path) -> Path:
-    """Provide a temporary directory for test outputs."""
-    return tmp_path
+    if not destination.exists():
+        pytest.fail(f"Clip file not created: {destination}")

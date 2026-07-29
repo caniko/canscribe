@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import sys
-import types
+from contextlib import nullcontext
 from pathlib import Path
-from typing import Any, cast
+from types import ModuleType, SimpleNamespace
+from typing import Any
+from unittest.mock import Mock
 
 import pytest
 import torch
@@ -54,63 +56,50 @@ class FakeDiarizationBackend:
         return [DiarizationSegment(0.0, 1.0, "SPEAKER_00")], ()
 
 
-def test_pipeline_forwards_exact_speaker_count(monkeypatch, tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("request_options", "expected_call", "expected_metadata"),
+    [
+        (
+            {"speaker_count": 3},
+            {"speaker_count": 3, "min_speakers": None, "max_speakers": None},
+            {"speaker_count": "3"},
+        ),
+        (
+            {"min_speakers": 2, "max_speakers": 5},
+            {"speaker_count": None, "min_speakers": 2, "max_speakers": 5},
+            {"min_speakers": "2", "max_speakers": "5"},
+        ),
+        (
+            {},
+            {"speaker_count": None, "min_speakers": None, "max_speakers": None},
+            {},
+        ),
+    ],
+)
+def test_pipeline_forwards_speaker_options(
+    monkeypatch,
+    tmp_path: Path,
+    request_options: dict[str, Any],
+    expected_call: dict[str, int | None],
+    expected_metadata: dict[str, str],
+) -> None:
     diarization_backend = FakeDiarizationBackend()
     _patch_pipeline_audio(monkeypatch, tmp_path)
 
     result = TranscriptionPipeline(
         asr_backend=FakeAsrBackend(),
         diarization_backend=diarization_backend,
-    ).run(TranscriptionRequest(tmp_path / "meeting.wav", speaker_count=3))
+    ).run(TranscriptionRequest(tmp_path / "meeting.wav", **request_options))
 
     assert diarization_backend.calls == [
-        {
-            "audio_path": str(tmp_path / "meeting.wav"),
-            "speaker_count": 3,
-            "min_speakers": None,
-            "max_speakers": None,
-        }
+        {"audio_path": str(tmp_path / "meeting.wav"), **expected_call}
     ]
-    assert result.backend_metadata["speaker_count"] == "3"
-
-
-def test_pipeline_forwards_speaker_range(monkeypatch, tmp_path: Path) -> None:
-    diarization_backend = FakeDiarizationBackend()
-    _patch_pipeline_audio(monkeypatch, tmp_path)
-
-    result = TranscriptionPipeline(
-        asr_backend=FakeAsrBackend(),
-        diarization_backend=diarization_backend,
-    ).run(
-        TranscriptionRequest(
-            tmp_path / "meeting.wav",
-            min_speakers=2,
-            max_speakers=5,
-        )
-    )
-
-    assert diarization_backend.calls[0]["speaker_count"] is None
-    assert diarization_backend.calls[0]["min_speakers"] == 2
-    assert diarization_backend.calls[0]["max_speakers"] == 5
-    assert result.backend_metadata["min_speakers"] == "2"
-    assert result.backend_metadata["max_speakers"] == "5"
-
-
-def test_pipeline_preserves_auto_speaker_count(monkeypatch, tmp_path: Path) -> None:
-    diarization_backend = FakeDiarizationBackend()
-    _patch_pipeline_audio(monkeypatch, tmp_path)
-
-    result = TranscriptionPipeline(
-        asr_backend=FakeAsrBackend(),
-        diarization_backend=diarization_backend,
-    ).run(TranscriptionRequest(tmp_path / "meeting.wav"))
-
-    assert diarization_backend.calls[0]["speaker_count"] is None
-    assert diarization_backend.calls[0]["min_speakers"] is None
-    assert diarization_backend.calls[0]["max_speakers"] is None
-    assert "speaker_count" not in result.backend_metadata
-    assert "min_speakers" not in result.backend_metadata
-    assert "max_speakers" not in result.backend_metadata
+    assert {
+        key: result.backend_metadata[key] for key in expected_metadata
+    } == expected_metadata
+    assert (
+        set(result.backend_metadata) & {"speaker_count", "min_speakers", "max_speakers"}
+    ) == set(expected_metadata)
 
 
 @pytest.mark.parametrize(
@@ -139,47 +128,39 @@ def test_pipeline_rejects_invalid_speaker_counts(
         ).run(transcription_request)
 
 
-def test_pyannote_backend_passes_speaker_options_to_pipeline(monkeypatch) -> None:
-    calls: list[dict[str, Any]] = []
+@pytest.mark.parametrize(
+    ("request_options", "expected_options"),
+    [({"speaker_count": 4}, {"num_speakers": 4}), ({}, {})],
+)
+def test_pyannote_backend_forwards_speaker_options(
+    monkeypatch,
+    request_options: dict[str, Any],
+    expected_options: dict[str, int],
+) -> None:
     _install_fake_progress_hook(monkeypatch)
     monkeypatch.setattr(
         "canscribe.backends._load_audio_tensor",
         lambda audio_path: (torch.zeros(1, 16000), 16000),
     )
 
-    backend = PyannoteCommunityBackend(device="cpu")
-    backend._pipeline = FakePyannotePipeline(calls)  # type: ignore[attr-defined]
-
-    segments, warnings = backend.diarize(
-        "meeting.wav",
-        speaker_count=4,
-        min_speakers=None,
-        max_speakers=None,
+    timeline = SimpleNamespace(
+        itertracks=lambda *, yield_label: [
+            (SimpleNamespace(start=0.0, end=1.0), None, "SPEAKER_00")
+        ]
     )
+    pipeline = Mock(
+        return_value=SimpleNamespace(exclusive_speaker_diarization=timeline)
+    )
+    backend = PyannoteCommunityBackend(device="cpu")
+    backend._pipeline = pipeline  # type: ignore[attr-defined]
+
+    segments, warnings = backend.diarize("meeting.wav", **request_options)
 
     assert warnings == ()
     assert segments == [DiarizationSegment(0.0, 1.0, "SPEAKER_00")]
-    assert calls[0]["num_speakers"] == 4
-    assert "min_speakers" not in calls[0]
-    assert "max_speakers" not in calls[0]
-
-
-def test_pyannote_backend_omits_speaker_options_in_auto_mode(monkeypatch) -> None:
-    calls: list[dict[str, Any]] = []
-    _install_fake_progress_hook(monkeypatch)
-    monkeypatch.setattr(
-        "canscribe.backends._load_audio_tensor",
-        lambda audio_path: (torch.zeros(1, 16000), 16000),
-    )
-
-    backend = PyannoteCommunityBackend(device="cpu")
-    backend._pipeline = FakePyannotePipeline(calls)  # type: ignore[attr-defined]
-
-    backend.diarize("meeting.wav")
-
-    assert "num_speakers" not in calls[0]
-    assert "min_speakers" not in calls[0]
-    assert "max_speakers" not in calls[0]
+    assert {
+        key: value for key, value in pipeline.call_args.kwargs.items() if key != "hook"
+    } == expected_options
 
 
 def _patch_pipeline_audio(monkeypatch, tmp_path: Path) -> None:
@@ -191,23 +172,9 @@ def _patch_pipeline_audio(monkeypatch, tmp_path: Path) -> None:
         "canscribe.pipeline.load_mono_audio",
         lambda path: (torch.ones(16000), 16000),
     )
-    monkeypatch.setattr(
-        "canscribe.pipeline.save_transcript",
-        lambda segments, input_path, output_path=None, debug=False: (
-            tmp_path / "out.txt"
-        ),
-    )
 
 
-class FakeProgressHook:
-    def __enter__(self) -> FakeProgressHook:
-        return self
-
-    def __exit__(self, *args: object) -> None:
-        return None
-
-
-def _install_fake_progress_hook(monkeypatch) -> None:
+def _install_fake_progress_hook(monkeypatch: pytest.MonkeyPatch) -> None:
     module_names = [
         "pyannote",
         "pyannote.audio",
@@ -216,34 +183,7 @@ def _install_fake_progress_hook(monkeypatch) -> None:
         "pyannote.audio.pipelines.utils.hook",
     ]
     for module_name in module_names:
-        monkeypatch.setitem(sys.modules, module_name, types.ModuleType(module_name))
+        monkeypatch.setitem(sys.modules, module_name, ModuleType(module_name))
 
-    hook_module = cast(Any, sys.modules["pyannote.audio.pipelines.utils.hook"])
-    setattr(hook_module, "ProgressHook", FakeProgressHook)
-
-
-class FakePyannotePipeline:
-    def __init__(self, calls: list[dict[str, Any]]) -> None:
-        self.calls = calls
-
-    def __call__(self, file: dict[str, Any], **kwargs: Any) -> FakeDiarizationResult:
-        self.calls.append({"file": file, **kwargs})
-        return FakeDiarizationResult()
-
-
-class FakeDiarizationResult:
-    exclusive_speaker_diarization = None
-
-    def __init__(self) -> None:
-        self.exclusive_speaker_diarization = FakeTimeline()
-
-
-class FakeTimeline:
-    def itertracks(self, *, yield_label: bool) -> list[tuple[FakeSegment, None, str]]:
-        assert yield_label
-        return [(FakeSegment(), None, "SPEAKER_00")]
-
-
-class FakeSegment:
-    start = 0.0
-    end = 1.0
+    hook_module = sys.modules["pyannote.audio.pipelines.utils.hook"]
+    setattr(hook_module, "ProgressHook", nullcontext)

@@ -14,8 +14,6 @@ from .config import (
     MOONSHINE_MODEL,
     PARAKEET_MODEL,
     PYANNOTE_MODEL,
-    VIDEO_EXTENSIONS,
-    get_device,
     silence_stderr,
     supports_flash_attention,
 )
@@ -99,9 +97,6 @@ def transcribe(
 ) -> None:
     """Transcribe an audio or video file with speaker diarization."""
     device = "cpu" if cpu else "auto"
-    if visual and audio_file.suffix.lower() not in VIDEO_EXTENSIONS:
-        typer.echo("Visual analysis requires a video file.", err=True)
-        raise typer.Exit(1)
 
     try:
         result = transcribe_file(
@@ -271,7 +266,7 @@ def doctor(
     ] = False,
 ) -> None:
     """Run deep environment diagnostics (library paths, env vars, GPU libs)."""
-    from torching.main import print_results, run_checks
+    from .checks.main import print_results, run_checks
 
     results = run_checks(probe=probe)
     print_results(results, verbose=verbose)

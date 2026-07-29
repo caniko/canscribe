@@ -13,7 +13,6 @@ QWEN3_VL_MODEL = "Qwen/Qwen3-VL-4B-Instruct"
 ASR_MAX_NEW_TOKENS = 512
 
 DEFAULT_ASR_BACKEND = "parakeet"
-DEFAULT_DIARIZATION_BACKEND = "pyannote-community"
 
 
 @contextmanager

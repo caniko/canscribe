@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
 from pathlib import Path
 from typing import IO
 
@@ -67,25 +66,3 @@ def append_segment(
         handle.write(rendered)
         if debug:
             print(rendered, end="")
-
-
-def save_transcript(
-    segments: Iterable[TranscriptSegment],
-    input_path: Path | str,
-    *,
-    output_path: Path | str | None = None,
-    debug: bool = False,
-) -> Path:
-    """Write transcript text and return the output path."""
-    resolved_input = Path(input_path)
-    resolved_output = (
-        Path(output_path)
-        if output_path is not None
-        else default_transcript_path(resolved_input)
-    )
-
-    with resolved_output.open("w", encoding="utf-8") as handle:
-        for segment in segments:
-            append_segment(handle, segment, debug=debug)
-
-    return resolved_output

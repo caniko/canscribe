@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 import torch
@@ -116,8 +117,6 @@ def test_pipeline_attaches_offline_visual_context(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from canscribe.vision.router import FrameType
-
     input_path = tmp_path / "meeting.mp4"
     input_path.write_text("not really a video", encoding="utf-8")
     output_path = tmp_path / "visual.txt"
@@ -133,60 +132,27 @@ def test_pipeline_attaches_offline_visual_context(
     )
 
     def fake_extract_frames(video_file: str, timestamps: list[float]):
-        return [
-            SimpleNamespace(timestamp=timestamps[0], frame=frame),
-            SimpleNamespace(timestamp=timestamps[1], frame=frame),
-        ]
+        return {timestamps[0]: frame, timestamps[1]: frame}
 
-    class FakeRouter:
-        def __init__(self, device: str) -> None:
-            self.calls = 0
-
-        def route(self, frame):
-            self.calls += 1
-            if self.calls == 1:
-                return SimpleNamespace(
-                    frame_type=FrameType.STATIC_FACE,
-                    faces=[SimpleNamespace()],
-                    frame=frame,
-                )
-            return SimpleNamespace(frame_type=FrameType.NO_FACE, faces=[], frame=frame)
-
-        def reset_tracking(self) -> None:
-            pass
-
-    class FakeFaceAnalyzer:
-        def __init__(self, device: str) -> None:
-            pass
-
-        def analyze_faces(self, frame, predetected_faces=None):
-            return [
-                SimpleNamespace(
-                    face_id="Person A",
-                    emotion="composed",
-                    bbox=(0, 0, 20, 30),
-                )
-            ]
-
-        def reset(self) -> None:
-            pass
-
-    class FakeSceneAnalyzer:
-        def __init__(self, device: str) -> None:
-            pass
-
-        def describe_frame(self, frame, timestamp: float):
-            return SimpleNamespace(
-                description=f"scene at {timestamp:.1f}s",
-                timestamp=timestamp,
+    face_analyzer = Mock()
+    face_analyzer.analyze_faces.side_effect = [
+        [
+            SimpleNamespace(
+                face_id="Person A",
+                emotion="composed",
+                bbox=(0, 0, 20, 30),
             )
+        ],
+        [],
+    ]
+    scene_analyzer = Mock()
+    scene_analyzer.describe_frame.return_value = "scene at 1.5s"
 
     monkeypatch.setattr(
         "canscribe.vision.extract_frames_at_timestamps", fake_extract_frames
     )
-    monkeypatch.setattr("canscribe.vision.FrameRouter", FakeRouter)
-    monkeypatch.setattr("canscribe.vision.FaceAnalyzer", FakeFaceAnalyzer)
-    monkeypatch.setattr("canscribe.vision.SceneAnalyzer", FakeSceneAnalyzer)
+    monkeypatch.setattr("canscribe.vision.FaceAnalyzer", lambda device: face_analyzer)
+    monkeypatch.setattr("canscribe.vision.SceneAnalyzer", lambda device: scene_analyzer)
 
     result = TranscriptionPipeline(
         asr_backend=FakeAsrBackend(),

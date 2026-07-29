@@ -1,17 +1,16 @@
-from __future__ import annotations
-
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
-from torching.checks.environment import (
+from canscribe.checks.environment import (
     check_key_env_vars,
     check_ld_library_path,
     check_python_path,
 )
-from torching.checks.gpu_libs import scan_bundled_libdrm
-from torching.checks.types import CheckResult
+from canscribe.checks.gpu_libs import scan_bundled_libdrm
+from canscribe.checks.types import CheckResult
 
 
 class TestScanBundledLibdrm:
@@ -53,7 +52,7 @@ class TestScanBundledLibdrm:
 class TestCheckLdLibraryPath:
     def test_missing_entry(self, monkeypatch) -> None:
         monkeypatch.setattr(
-            "torching.checks.environment.os.environ",
+            "canscribe.checks.environment.os.environ",
             {"LD_LIBRARY_PATH": "/nonexistent/path"},
         )
         results = check_ld_library_path()
@@ -63,7 +62,7 @@ class TestCheckLdLibraryPath:
 class TestCheckKeyEnvVars:
     def test_reports_ok_for_set_var(self, monkeypatch) -> None:
         monkeypatch.setattr(
-            "torching.checks.environment.os.environ",
+            "canscribe.checks.environment.os.environ",
             {"HF_TOKEN": "abc123"},
         )
         results = check_key_env_vars()
@@ -73,7 +72,7 @@ class TestCheckKeyEnvVars:
 
     def test_reports_info_for_unset_var(self, monkeypatch) -> None:
         monkeypatch.setattr(
-            "torching.checks.environment.os.environ",
+            "canscribe.checks.environment.os.environ",
             {},
         )
         results = check_key_env_vars()
@@ -85,7 +84,7 @@ class TestCheckKeyEnvVars:
 class TestCheckPythonPath:
     def test_info_when_not_set(self, monkeypatch) -> None:
         monkeypatch.setattr(
-            "torching.checks.environment.os.environ",
+            "canscribe.checks.environment.os.environ",
             {},
         )
         results = check_python_path()
@@ -95,7 +94,7 @@ class TestCheckPythonPath:
         d = tmp_path / "p"
         d.mkdir()
         monkeypatch.setattr(
-            "torching.checks.environment.os.environ",
+            "canscribe.checks.environment.os.environ",
             {"PYTHONPATH": str(d)},
         )
         results = check_python_path()
@@ -103,7 +102,7 @@ class TestCheckPythonPath:
 
     def test_warn_on_missing_entry(self, monkeypatch) -> None:
         monkeypatch.setattr(
-            "torching.checks.environment.os.environ",
+            "canscribe.checks.environment.os.environ",
             {"PYTHONPATH": "/does/not/exist"},
         )
         results = check_python_path()
@@ -111,10 +110,9 @@ class TestCheckPythonPath:
 
 
 class TestCheckResultType:
-    def test_slots(self) -> None:
+    def test_named_tuple(self) -> None:
         r = CheckResult("OK", "test", "detail")
-        with pytest.raises(AttributeError):
-            r.foo = "bar"  # type: ignore[attr-defined]
+        assert isinstance(r, tuple)
 
     def test_fields(self) -> None:
         r = CheckResult("OK", "test", "detail")
@@ -134,56 +132,21 @@ class TestCheckResultType:
 
 
 class TestCliInvocation:
-    def test_torching_exits_zero(self) -> None:
+    @pytest.mark.parametrize(
+        ("args", "timeout"),
+        [
+            (["canscribe", "doctor"], 30),
+            (["canscribe", "doctor", "--verbose"], 30),
+            (["canscribe", "doctor", "--probe"], 180),
+        ],
+    )
+    def test_canscribe_doctor_variants_exit_zero(
+        self, args: list[str], timeout: int
+    ) -> None:
         result = subprocess.run(
-            ["torching"],
+            [sys.executable, "-m", "canscribe.main", *args[1:]],
             capture_output=True,
             text=True,
-            timeout=30,
-        )
-        assert result.returncode == 0
-
-    def test_torching_verbose_exits_zero(self) -> None:
-        result = subprocess.run(
-            ["torching", "--verbose"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        assert result.returncode == 0
-
-    def test_torching_probe_exits_zero(self) -> None:
-        result = subprocess.run(
-            ["torching", "--probe"],
-            capture_output=True,
-            text=True,
-            timeout=180,
-        )
-        assert result.returncode == 0
-
-    def test_canscribe_doctor_exits_zero(self) -> None:
-        result = subprocess.run(
-            ["canscribe", "doctor"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        assert result.returncode == 0
-
-    def test_canscribe_doctor_verbose_exits_zero(self) -> None:
-        result = subprocess.run(
-            ["canscribe", "doctor", "--verbose"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        assert result.returncode == 0
-
-    def test_canscribe_doctor_probe_exits_zero(self) -> None:
-        result = subprocess.run(
-            ["canscribe", "doctor", "--probe"],
-            capture_output=True,
-            text=True,
-            timeout=180,
+            timeout=timeout,
         )
         assert result.returncode == 0

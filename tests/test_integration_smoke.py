@@ -10,11 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.conftest import (
-    gpu_backend_name,
-    requires_gpu_and_token,
-    requires_pyannote_audio_decoder,
-)
+from tests.conftest import requires_gpu_and_token, requires_pyannote_audio_decoder
 
 pytestmark = pytest.mark.integration
 
@@ -41,5 +37,4 @@ def test_live_default_stack_smoke(
     assert result.backend_metadata["asr_backend"] == "parakeet"
     assert result.backend_metadata["diarization_backend"] == "pyannote-community"
     assert result.backend_metadata["device"] in {"cuda", "mps", "cpu"}
-    assert gpu_backend_name() in {"rocm", "cuda", "unknown-gpu"}
     assert output_path.read_text(encoding="utf-8").strip()

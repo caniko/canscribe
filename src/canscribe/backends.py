@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import wave
-from collections.abc import Sequence
 from typing import Any, Protocol, cast
 
 import numpy as np
@@ -21,9 +20,7 @@ from .types import (
     AsrBackendName,
     AsrResult,
     BackendSetupError,
-    DiarizationBackendName,
     DiarizationSegment,
-    WordTimestamp,
 )
 
 
@@ -130,22 +127,10 @@ class ParakeetAsrBackend:
     ) -> AsrResult:
         audio_array = audio_chunk.detach().to("cpu").float().numpy()
         with torch.inference_mode():
-            try:
-                output = self.pipeline(
-                    {"array": audio_array, "sampling_rate": sample_rate},
-                    return_timestamps="word",
-                    max_new_tokens=ASR_MAX_NEW_TOKENS,
-                )
-            except TypeError:
-                output = self.pipeline(
-                    {"array": audio_array, "sampling_rate": sample_rate},
-                    max_new_tokens=ASR_MAX_NEW_TOKENS,
-                )
-            except ValueError:
-                output = self.pipeline(
-                    {"array": audio_array, "sampling_rate": sample_rate},
-                    max_new_tokens=ASR_MAX_NEW_TOKENS,
-                )
+            output = self.pipeline(
+                {"array": audio_array, "sampling_rate": sample_rate},
+                max_new_tokens=ASR_MAX_NEW_TOKENS,
+            )
 
         if isinstance(output, str):
             return AsrResult(text=clean_repetitive_text(output))
@@ -155,8 +140,7 @@ class ParakeetAsrBackend:
             )
 
         text = clean_repetitive_text(str(output.get("text", "")))
-        words = _parse_word_timestamps(output.get("chunks"))
-        return AsrResult(text=text, words=tuple(words))
+        return AsrResult(text=text)
 
 
 class MoonshineAsrBackend:
@@ -344,19 +328,6 @@ def create_asr_backend(
     )
 
 
-def create_diarization_backend(
-    backend: DiarizationBackendName | str,
-    *,
-    model_name: str | None = None,
-    device: str,
-) -> DiarizationBackend:
-    if backend == "pyannote-community":
-        return PyannoteCommunityBackend(model_name or PYANNOTE_MODEL, device=device)
-    raise BackendSetupError(
-        f"Unknown diarization backend '{backend}'. Expected: pyannote-community."
-    )
-
-
 def load_mono_audio(
     audio_path: str, target_sample_rate: int = 16000
 ) -> tuple[torch.Tensor, int]:
@@ -421,11 +392,13 @@ def _load_pcm_wav(audio_path: str) -> tuple[torch.Tensor, int]:
 
     samples = np.frombuffer(frames, dtype=dtype)
     if channels > 1:
-        samples = samples.reshape(-1, channels).T
+        waveform = torch.from_numpy(
+            samples.reshape(-1, channels).T.astype(np.float32, copy=False)
+        )
     else:
-        samples = samples.reshape(1, -1)
-
-    waveform = torch.from_numpy(samples.astype(np.float32, copy=False))
+        waveform = torch.from_numpy(
+            samples.reshape(1, -1).astype(np.float32, copy=False)
+        )
     if sample_width == 1:
         waveform = (waveform - 128.0) / 128.0
     elif sample_width == 2:
@@ -441,28 +414,3 @@ def _can_use_torchaudio_resample() -> bool:
     except Exception:
         return False
     return True
-
-
-def _parse_word_timestamps(chunks: object) -> list[WordTimestamp]:
-    if not isinstance(chunks, Sequence):
-        return []
-
-    words: list[WordTimestamp] = []
-    for chunk in chunks:
-        if not isinstance(chunk, dict):
-            continue
-        timestamp = chunk.get("timestamp")
-        start: float | None = None
-        end: float | None = None
-        if isinstance(timestamp, Sequence) and len(timestamp) >= 2:
-            start_value, end_value = timestamp[0], timestamp[1]
-            start = float(start_value) if start_value is not None else None
-            end = float(end_value) if end_value is not None else None
-        words.append(
-            WordTimestamp(
-                word=str(chunk.get("text", "")).strip(),
-                start=start,
-                end=end,
-            )
-        )
-    return words

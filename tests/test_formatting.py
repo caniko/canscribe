@@ -5,7 +5,6 @@ from pathlib import Path
 from canscribe.formatting import (
     clean_repetitive_text,
     default_transcript_path,
-    save_transcript,
 )
 from canscribe.types import TranscriptSegment
 
@@ -38,28 +37,4 @@ def test_clean_repetitive_text_reduces_common_asr_artifacts() -> None:
 def test_default_transcript_path_uses_input_stem() -> None:
     assert default_transcript_path(Path("/tmp/meeting.mp4")) == Path(
         "/tmp/transcript-meeting.txt"
-    )
-
-
-def test_save_transcript_writes_all_segment_lines(tmp_path: Path) -> None:
-    input_path = tmp_path / "meeting.wav"
-    output_path = tmp_path / "custom.txt"
-    segments = [
-        TranscriptSegment(0, 1, "SPEAKER_00", "hello"),
-        TranscriptSegment(
-            1,
-            2,
-            "SPEAKER_01",
-            "look",
-            visual_description="whiteboard",
-        ),
-    ]
-
-    written_path = save_transcript(segments, input_path, output_path=output_path)
-
-    assert written_path == output_path
-    assert output_path.read_text(encoding="utf-8") == (
-        "[0.00s - 1.00s] SPEAKER_00: hello\n"
-        "[1.00s - 2.00s] SPEAKER_01: look\n"
-        "    [Visual: whiteboard]\n"
     )

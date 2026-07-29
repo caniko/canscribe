@@ -11,7 +11,6 @@ import cv2
 import numpy as np
 import torch
 from insightface.app import FaceAnalysis  # type: ignore[import-untyped]
-from sklearn.cluster import DBSCAN  # type: ignore[import-untyped]
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 
 
@@ -24,11 +23,6 @@ EMOTION_ADJECTIVES = {
     "sad": "somber",
     "surprise": "surprised",
     "neutral": "composed",
-    # Additional labels some models use
-    "contempt": "dismissive",
-    "happiness": "cheerful",
-    "sadness": "somber",
-    "anger": "frustrated",
 }
 
 
@@ -51,9 +45,7 @@ class FaceAnalysisResult:
 
     face_id: str  # Assigned identity
     emotion: str  # Adjective description
-    emotion_confidence: float
     bbox: tuple[int, int, int, int]  # x, y, w, h
-    embedding: np.ndarray
 
 
 class FaceAnalyzer:
@@ -62,7 +54,6 @@ class FaceAnalyzer:
 
     - Uses InsightFace ArcFace for 512-dim embeddings
     - Uses HuggingFace ViT for emotion classification (no TensorFlow)
-    - Clusters embeddings with DBSCAN for identity tracking
     """
 
     # HuggingFace emotion model (small, fast, PyTorch-based)
@@ -170,7 +161,7 @@ class FaceAnalyzer:
             self._known_identities.append(identity)
             return identity.face_id
 
-    def _detect_emotion(self, face_crop: np.ndarray) -> tuple[str, float]:
+    def _detect_emotion(self, face_crop: np.ndarray) -> str:
         """
         Detect emotion from face crop using HuggingFace model.
 
@@ -178,7 +169,7 @@ class FaceAnalyzer:
             face_crop: BGR face image as numpy array.
 
         Returns:
-            Tuple of (emotion_adjective, confidence).
+            Emotion adjective.
         """
         try:
             # Convert BGR to RGB
@@ -192,39 +183,29 @@ class FaceAnalyzer:
             # Inference
             with torch.no_grad():
                 outputs = self.emotion_model(**inputs)
-                probs = torch.softmax(outputs.logits, dim=-1)
-                confidence, predicted_idx = torch.max(probs, dim=-1)
+                predicted_idx = outputs.logits.argmax(dim=-1)
 
             # Get label
             label = self.emotion_model.config.id2label[predicted_idx.item()]
             label_lower = label.lower()
 
             adjective = EMOTION_ADJECTIVES.get(label_lower, "composed")
-            return adjective, confidence.item()
+            return adjective
 
         except Exception:
-            return "composed", 0.0
+            return "composed"
 
-    def analyze_faces(
-        self,
-        frame: np.ndarray,
-        predetected_faces: list | None = None,
-    ) -> list[FaceAnalysisResult]:
+    def analyze_faces(self, frame: np.ndarray) -> list[FaceAnalysisResult]:
         """
         Analyze all faces in a frame.
 
         Args:
             frame: BGR image as numpy array.
-            predetected_faces: Optional pre-detected faces from router.
 
         Returns:
             List of FaceAnalysisResult for each detected face.
         """
-        # Use pre-detected faces or detect new ones
-        if predetected_faces is not None:
-            faces = predetected_faces
-        else:
-            faces = self.face_app.get(frame)
+        faces = self.face_app.get(frame)
 
         results = []
 
@@ -248,59 +229,14 @@ class FaceAnalyzer:
                 continue
 
             # Detect emotion
-            emotion, confidence = self._detect_emotion(face_crop)
+            emotion = self._detect_emotion(face_crop)
 
             results.append(
                 FaceAnalysisResult(
                     face_id=face_id,
                     emotion=emotion,
-                    emotion_confidence=confidence,
                     bbox=(x1, y1, w, h),
-                    embedding=embedding,
                 )
             )
 
         return results
-
-    def cluster_identities(self) -> dict[str, str]:
-        """
-        Re-cluster all known identities using DBSCAN.
-
-        Call this at the end of processing to merge any
-        incorrectly split identities.
-
-        Returns:
-            Mapping of old face_id to new face_id.
-        """
-        if len(self._known_identities) < 2:
-            return {}
-
-        # Collect all centroids
-        centroids = np.array([i.centroid for i in self._known_identities])
-
-        # Cluster with DBSCAN
-        clustering = DBSCAN(
-            eps=self.embedding_threshold,
-            min_samples=1,
-            metric="cosine",
-        ).fit(centroids)
-
-        # Build mapping
-        mapping = {}
-        cluster_names: dict[int, str] = {}
-
-        for i, (identity, label) in enumerate(
-            zip(self._known_identities, clustering.labels_)
-        ):
-            if label not in cluster_names:
-                cluster_names[label] = f"Person {chr(65 + len(cluster_names))}"
-
-            if identity.face_id != cluster_names[label]:
-                mapping[identity.face_id] = cluster_names[label]
-
-        return mapping
-
-    def reset(self) -> None:
-        """Reset tracked identities (call between videos)."""
-        self._known_identities.clear()
-        self._next_person_id = 0
