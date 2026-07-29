@@ -10,21 +10,11 @@ Run the main checks:
 
 ```sh
 uv run mypy .
-uv run ruff format .
 uv run pytest
+nix fmt
 ```
 
-The Nix shell also exposes helper commands:
-
-```sh
-canscribe-sync
-canscribe-test
-canscribe-test-live
-canscribe-typecheck
-canscribe-smoke
-```
-
-## Documentation and Site
+## Documentation
 
 Build the mdBook documentation:
 
@@ -32,10 +22,10 @@ Build the mdBook documentation:
 nix build .#docs
 ```
 
-Build the combined Codeberg Pages site:
+Build the Pages site:
 
 ```sh
 nix build .#site
 ```
 
-The combined site puts the Plinth landing page at the deployment root and the mdBook documentation under `/docs/`.
+The `site` output is the mdBook build published at the project Pages URL.

@@ -4,7 +4,7 @@ canscribe is an audio and video transcription CLI. It extracts audio from media 
 
 The default speech-to-text backend is NVIDIA Parakeet TDT 0.6B v3. Moonshine remains available as a compatibility backend. Diarization uses `pyannote/speaker-diarization-community-1`, which requires a Hugging Face token and acceptance of the model terms.
 
-The optional visual mode adds frame analysis for video inputs. It routes frames through face detection, face analysis, or scene description depending on whether a speaking face, static face, or no face is detected.
+The optional visual mode adds frame analysis for video inputs and attaches visual context to transcript segments.
 
 ## Main Commands
 
@@ -12,6 +12,7 @@ The optional visual mode adds frame analysis for video inputs. It routes frames 
 canscribe <audio-or-video-file>
 canscribe --visual <video-file>
 canscribe check [video-file]
+canscribe doctor [OPTIONS]
 ```
 
 `ct` is installed as a compatibility alias for `canscribe`.

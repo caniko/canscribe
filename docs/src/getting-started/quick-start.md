@@ -45,5 +45,5 @@ canscribe --min-speakers 3 --max-speakers 6 ~/Videos/meeting.mp4
 Use Moonshine when you need the compatibility backend:
 
 ```sh
-canscribe --asr moonshine --model UsefulSensors/moonshine-base ~/Videos/meeting.mp4
+canscribe --asr moonshine --model UsefulSensors/moonshine-tiny ~/Videos/meeting.mp4
 ```

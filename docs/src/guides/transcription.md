@@ -12,17 +12,18 @@ Supported video inputs include `mp4`, `mkv`, `avi`, `mov`, `webm`, `flv`, and `w
 
 ## Common Options
 
-| Option | Description | Default |
-| --- | --- | --- |
-| `--asr` | ASR backend: `parakeet` or `moonshine` | `parakeet` |
-| `--model`, `-m` | ASR model identifier | backend default |
-| `--diarization`, `-d` | pyannote diarization model | `pyannote/speaker-diarization-community-1` |
-| `--speakers` | Exact speaker count | auto |
-| `--min-speakers` | Minimum speaker count | auto |
-| `--max-speakers` | Maximum speaker count | auto |
-| `--cpu` | Force CPU execution | false |
-| `--debug` | Print each segment while processing | false |
-| `--visual`, `-v` | Enable visual analysis for video inputs | false |
+| Option                | Description                             | Default                                    |
+| --------------------- | --------------------------------------- | ------------------------------------------ |
+| `--asr`               | ASR backend: `parakeet` or `moonshine`  | `parakeet`                                 |
+| `--model`, `-m`       | ASR model identifier                    | backend default                            |
+| `--diarization`, `-d` | pyannote diarization model              | `pyannote/speaker-diarization-community-1` |
+| `--speakers`          | Exact speaker count                     | auto                                       |
+| `--min-speakers`      | Minimum speaker count                   | auto                                       |
+| `--max-speakers`      | Maximum speaker count                   | auto                                       |
+| `--cpu`               | Force CPU execution                     | false                                      |
+| `--debug`             | Print each segment while processing     | false                                      |
+| `--visual`, `-v`      | Enable visual analysis for video inputs | false                                      |
+| `--resume`, `-r`      | Resume an existing partial transcript   | false                                      |
 
 ## Transcript Format
 

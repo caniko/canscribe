@@ -14,15 +14,12 @@ canscribe check ~/Videos/meeting.mp4
 
 The check command reports Python package imports, Torch device availability, FFmpeg availability, decoder behavior, pyannote import readiness, and torchcodec audio decoding.
 
-## Nix Smoke Probe
-
-Inside `nix develop`, the flake also provides:
+Run the deeper library-path and GPU-runtime checks with:
 
 ```sh
-canscribe-smoke
+canscribe doctor
+canscribe doctor --verbose
 ```
-
-The smoke probe prints Torch package versions, FFmpeg version, backend detection, GPU device details when available, and a small GPU kernel probe.
 
 ## Common Failure Points
 

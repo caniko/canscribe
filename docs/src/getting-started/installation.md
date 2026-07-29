@@ -17,7 +17,7 @@ From the repository root:
 nix develop
 ```
 
-The development shell provides Python 3.13, uv, FFmpeg, OpenCV, helper commands, and the native libraries needed by the Python wheels.
+The development shell provides Python 3.13, uv, FFmpeg, OpenCV, and the native libraries needed by the Python wheels.
 
 ## Sync Python Dependencies
 
