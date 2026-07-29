@@ -2,28 +2,13 @@
 scope = "full"
 mode = "custom"
 backend = "py-harbor"
+components = ["treefmt", "nix-flake-check", "uv-mypy"]
 
 [flake.expected_outputs]
-packages = [
-  "canscribe-cpu",
-  "docs",
-  "site",
-]
+packages = ["canscribe-cpu", "docs", "site"]
 apps = ["canscribe-cpu"]
-dev_shells = [
-  "cpu",
-  "docs",
-  "nvidia",
-  "amd",
-  "apple",
-  "site",
-]
-checks = [
-  "flake-eval",
-  "offline-tests",
-  "typecheck",
-  "uv-format",
-]
+dev_shells = ["cpu", "docs", "nvidia", "amd", "apple"]
+checks = ["flake-eval", "offline-tests", "typecheck"]
 
 [ci]
 runtime = "nix"
@@ -31,8 +16,3 @@ runner = "codeberg-medium"
 with_pypi_publish = true
 provider = "actions"
 platform = "forgejo"
-
-[ci.pages]
-repo = "caniko/canscribe"
-token_secret = "CODEBERG_TOKEN"
-source_branch = "mvp"

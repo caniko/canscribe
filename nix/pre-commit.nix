@@ -1,7 +1,6 @@
 {
   pkgs,
   treefmtWrapper,
-  rustToolchain ? null,
 }: {
   treefmt = {
     enable = true;
@@ -17,14 +16,6 @@
     extraPackages = [pkgs.nix];
     pass_filenames = false;
     stages = ["manual"];
-  };
-
-  uv-ruff-format = {
-    enable = true;
-    name = "uv ruff format";
-    entry = "uv run ruff format --check .";
-    extraPackages = [pkgs.uv];
-    pass_filenames = false;
   };
 
   uv-mypy = {

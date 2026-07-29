@@ -2,30 +2,23 @@
 name = "canscribe"
 version = "0.1.0"
 description = "Simple audio transcription CLI that uses cutting edge models"
-authors = [
-    { name = "Can H. Tartanoglu", email = "gpg@rotas.mozmail.com" }
-]
+authors = [{ name = "Can H. Tartanoglu", email = "gpg@rotas.mozmail.com" }]
 requires-python = "==3.13.*"
 
 # Base dependencies (platform-agnostic, no PyTorch or onnxruntime)
 dependencies = [
-    "pyannote.audio",
-    "torching>=0.1.0",
-    # torchcodec wheels don't declare their torch requirement; a mismatched
-    # pair aborts at import (op registration). 0.8.x pairs with torch 2.9.x —
-    # bump together with the torch pin below.
-    "torchcodec>=0.8,<0.9",
-    # parakeet-tdt ASR (nvidia/parakeet-tdt-0.6b-v3) needs the TDT decoder,
-    # which only landed in transformers 5.x.
-    "transformers>=5.0.0",
-    "librosa",  # required by transformers' ParakeetFeatureExtractor
-    "typer",
-    # Visual analysis
-    "insightface",
-    "opencv-python-headless",  # Fallback; Nix provides opencv4 with VAAPI via PYTHONPATH
-    "scenedetect",
-    "scikit-learn",
-    "timm",  # For HuggingFace vision models
+  "pyannote.audio",
+  # torchcodec wheels don't declare their torch requirement; a mismatched
+  # pair aborts at import (op registration). 0.8.x pairs with torch 2.9.x —
+  # bump together with the torch pin below.
+  "torchcodec>=0.8,<0.9",
+  # Parakeet TDT needs the TDT decoder, which only landed in Transformers 5.x.
+  "transformers>=5.0.0",
+  "librosa",             # required by transformers' ParakeetFeatureExtractor
+  "typer",
+  # Visual analysis
+  "insightface",
+  "opencv-python-headless", # Fallback; Nix provides opencv4 with VAAPI via PYTHONPATH
 ]
 
 [project.optional-dependencies]
@@ -33,35 +26,35 @@ dependencies = [
 
 # NVIDIA CUDA 12.8 - Full GPU acceleration
 nvidia = [
-    "torch>=2.9.1",
-    "torchaudio>=2.9.1",
-    "torchvision>=0.24.1",
-    "onnxruntime-gpu",
+  "torch>=2.9.1",
+  "torchaudio>=2.9.1",
+  "torchvision>=0.24.1",
+  "onnxruntime-gpu",
 ]
 
 # AMD ROCm 6.4 - Linux only
 amd = [
-    "torch>=2.9.1",
-    "torchaudio>=2.9.1",
-    "torchvision>=0.24.1",
-    "onnxruntime",
-    "pytorch-triton-rocm>=3.5.1 ; sys_platform == 'linux'",
+  "torch>=2.9.1",
+  "torchaudio>=2.9.1",
+  "torchvision>=0.24.1",
+  "onnxruntime",
+  "pytorch-triton-rocm>=3.5.1 ; sys_platform == 'linux'",
 ]
 
 # Apple Silicon - MPS acceleration built into PyPI wheels
 apple = [
-    "torch>=2.9.1",
-    "torchaudio>=2.9.1",
-    "torchvision>=0.24.1",
-    "onnxruntime",
+  "torch>=2.9.1",
+  "torchaudio>=2.9.1",
+  "torchvision>=0.24.1",
+  "onnxruntime",
 ]
 
 # CPU only - No GPU acceleration (smaller download)
 cpu = [
-    "torch>=2.9.1",
-    "torchaudio>=2.9.1",
-    "torchvision>=0.24.1",
-    "onnxruntime",
+  "torch>=2.9.1",
+  "torchaudio>=2.9.1",
+  "torchvision>=0.24.1",
+  "onnxruntime",
 ]
 
 # Flash Attention 2 - NVIDIA Ampere+ only (CC 8.0+)
@@ -75,13 +68,15 @@ ct = "canscribe.main:main"
 # UV Configuration
 # ============================================================
 
-[tool.uv.workspace]
-members = ["src/torching"]
-
 [tool.uv]
 # Platform extras are mutually exclusive
 conflicts = [
-    [{ extra = "nvidia" }, { extra = "amd" }, { extra = "apple" }, { extra = "cpu" }],
+  [
+    { extra = "nvidia" },
+    { extra = "amd" },
+    { extra = "apple" },
+    { extra = "cpu" },
+  ],
 ]
 
 # Index definitions
@@ -103,25 +98,21 @@ explicit = true
 # Source routing by platform extra
 [tool.uv.sources]
 torch = [
-    { index = "pytorch-cu128", extra = "nvidia" },
-    { index = "pytorch-rocm64", extra = "amd" },
-    { index = "pytorch-cpu", extra = "cpu" },
+  { index = "pytorch-cu128", extra = "nvidia" },
+  { index = "pytorch-rocm64", extra = "amd" },
+  { index = "pytorch-cpu", extra = "cpu" },
 ]
 torchaudio = [
-    { index = "pytorch-cu128", extra = "nvidia" },
-    { index = "pytorch-rocm64", extra = "amd" },
-    { index = "pytorch-cpu", extra = "cpu" },
+  { index = "pytorch-cu128", extra = "nvidia" },
+  { index = "pytorch-rocm64", extra = "amd" },
+  { index = "pytorch-cpu", extra = "cpu" },
 ]
 torchvision = [
-    { index = "pytorch-cu128", extra = "nvidia" },
-    { index = "pytorch-rocm64", extra = "amd" },
-    { index = "pytorch-cpu", extra = "cpu" },
+  { index = "pytorch-cu128", extra = "nvidia" },
+  { index = "pytorch-rocm64", extra = "amd" },
+  { index = "pytorch-cpu", extra = "cpu" },
 ]
-pytorch-triton-rocm = [
-    { index = "pytorch-rocm64", extra = "amd" },
-]
-torching = { workspace = true }
-
+pytorch-triton-rocm = [{ index = "pytorch-rocm64", extra = "amd" }]
 [tool.uv.extra-build-dependencies]
 flash-attn = ["torch"]
 
@@ -130,11 +121,7 @@ flash-attn = ["torch"]
 # ============================================================
 
 [dependency-groups]
-dev = [
-    "mypy",
-    "pytest>=8.0",
-    "ruff",
-]
+dev = ["mypy", "pytest>=8.0", "ruff"]
 
 [build-system]
 requires = ["uv_build>=0.8.23,<0.9.0"]
@@ -144,11 +131,9 @@ build-backend = "uv_build"
 testpaths = ["tests"]
 addopts = ["-m", "not integration"]
 markers = [
-    "integration: marks tests as integration tests (may require GPU, HF_TOKEN)",
-    "slow: marks tests as slow integration tests",
+  "integration: marks tests as integration tests (may require GPU, HF_TOKEN)",
+  "slow: marks tests as slow integration tests",
 ]
 
 [tool.mypy]
-exclude = [
-    "^\\.venv/",
-]
+exclude = ["^\\.venv/"]
