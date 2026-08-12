@@ -128,6 +128,7 @@
             uvExtra
             extraEnv
             ;
+          autoSync = false;
           basePackages = runtime.basePackages ++ [pkgs.mdbook];
           extraPackages = pre-commit-check.enabledPackages ++ extraPackages;
           baseLibs = runtime.baseLibs;
