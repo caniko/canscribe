@@ -5,7 +5,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     py-harbor = {
-      url = "git+https://codeberg.org/caniko/py-harbor.git?ref=trunk";
+      url = "git+https://codeberg.org/caniko/py-harbor.git?ref=trunk&rev=c4bcdbc27f88cc8eb4056b06d5f69a5dec63ff28";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -128,6 +128,7 @@
             uvExtra
             extraEnv
             ;
+          autoSync = false;
           basePackages = runtime.basePackages ++ [pkgs.mdbook];
           extraPackages = pre-commit-check.enabledPackages ++ extraPackages;
           baseLibs = runtime.baseLibs;
