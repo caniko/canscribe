@@ -12,7 +12,8 @@ checks = ["flake-eval", "offline-tests", "typecheck"]
 
 [ci]
 runtime = "nix"
-runner = "codeberg-medium"
+runner = "ubuntu-24.04"
 with_pypi_publish = true
 provider = "actions"
-platform = "forgejo"
+platform = "github"
+all_features = false
