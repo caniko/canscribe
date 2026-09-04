@@ -71,11 +71,38 @@
         "type": "github"
       }
     },
+    "harbor-py": {
+      "inputs": {
+        "flake-utils": "flake-utils",
+        "meta-harbor": "meta-harbor",
+        "nix-opencode-lsp": "nix-opencode-lsp",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "pyproject-build-systems": "pyproject-build-systems",
+        "pyproject-nix": "pyproject-nix",
+        "uv2nix": "uv2nix"
+      },
+      "locked": {
+        "lastModified": 1787224146,
+        "narHash": "sha256-L0qcGrB1qyrSlf7lCsq6CEwYeHOc1h5i45PNTeMgrdw=",
+        "ref": "refs/heads/trunk",
+        "rev": "9a6231b80acdaa29e2d2bd7145db08c71ddf1fd1",
+        "revCount": 22,
+        "type": "git",
+        "url": "https://github.com/caniko/harbor-py.git"
+      },
+      "original": {
+        "rev": "9a6231b80acdaa29e2d2bd7145db08c71ddf1fd1",
+        "type": "git",
+        "url": "https://github.com/caniko/harbor-py.git"
+      }
+    },
     "meta-harbor": {
       "inputs": {
         "flake-parts": "flake-parts",
         "nixpkgs": [
-          "py-harbor",
+          "harbor-py",
           "nixpkgs"
         ]
       },
@@ -97,11 +124,11 @@
     "nix-opencode-lsp": {
       "inputs": {
         "flake-utils": [
-          "py-harbor",
+          "harbor-py",
           "flake-utils"
         ],
         "nixpkgs": [
-          "py-harbor",
+          "harbor-py",
           "nixpkgs"
         ]
       },
@@ -181,46 +208,18 @@
         "type": "github"
       }
     },
-    "py-harbor": {
-      "inputs": {
-        "flake-utils": "flake-utils",
-        "meta-harbor": "meta-harbor",
-        "nix-opencode-lsp": "nix-opencode-lsp",
-        "nixpkgs": [
-          "nixpkgs"
-        ],
-        "pyproject-build-systems": "pyproject-build-systems",
-        "pyproject-nix": "pyproject-nix",
-        "uv2nix": "uv2nix"
-      },
-      "locked": {
-        "lastModified": 1787224146,
-        "narHash": "sha256-L0qcGrB1qyrSlf7lCsq6CEwYeHOc1h5i45PNTeMgrdw=",
-        "ref": "trunk",
-        "rev": "9a6231b80acdaa29e2d2bd7145db08c71ddf1fd1",
-        "revCount": 22,
-        "type": "git",
-        "url": "https://codeberg.org/caniko/py-harbor.git"
-      },
-      "original": {
-        "ref": "trunk",
-        "rev": "9a6231b80acdaa29e2d2bd7145db08c71ddf1fd1",
-        "type": "git",
-        "url": "https://codeberg.org/caniko/py-harbor.git"
-      }
-    },
     "pyproject-build-systems": {
       "inputs": {
         "nixpkgs": [
-          "py-harbor",
+          "harbor-py",
           "nixpkgs"
         ],
         "pyproject-nix": [
-          "py-harbor",
+          "harbor-py",
           "pyproject-nix"
         ],
         "uv2nix": [
-          "py-harbor",
+          "harbor-py",
           "uv2nix"
         ]
       },
@@ -241,7 +240,7 @@
     "pyproject-nix": {
       "inputs": {
         "nixpkgs": [
-          "py-harbor",
+          "harbor-py",
           "nixpkgs"
         ]
       },
@@ -262,8 +261,11 @@
     "root": {
       "inputs": {
         "git-hooks": "git-hooks",
+        "harbor-py": "harbor-py",
         "nixpkgs": "nixpkgs_2",
-        "py-harbor": "py-harbor",
+        "py-harbor": [
+          "harbor-py"
+        ],
         "treefmt-nix": "treefmt-nix"
       }
     },
@@ -303,11 +305,11 @@
     "uv2nix": {
       "inputs": {
         "nixpkgs": [
-          "py-harbor",
+          "harbor-py",
           "nixpkgs"
         ],
         "pyproject-nix": [
-          "py-harbor",
+          "harbor-py",
           "pyproject-nix"
         ]
       },

@@ -4,10 +4,12 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    py-harbor = {
-      url = "git+https://codeberg.org/caniko/py-harbor.git?ref=trunk&rev=9a6231b80acdaa29e2d2bd7145db08c71ddf1fd1";
+    harbor-py = {
+      url = "git+https://github.com/caniko/harbor-py.git?rev=9a6231b80acdaa29e2d2bd7145db08c71ddf1fd1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    py-harbor.follows = "harbor-py";
 
     treefmt-nix.url = "github:numtide/treefmt-nix";
     git-hooks.url = "github:cachix/git-hooks.nix";
@@ -16,13 +18,13 @@
   outputs = {
     self,
     nixpkgs,
-    py-harbor,
+    harbor-py,
     treefmt-nix,
     git-hooks,
     ...
   }: let
     inherit (nixpkgs) lib;
-    py = py-harbor.lib;
+    py = harbor-py.lib;
 
     mkRuntime = pkgs: let
       ffmpeg = py.mkFfmpegCompat {inherit pkgs;};
