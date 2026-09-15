@@ -48,7 +48,7 @@
           pkgs.zstd
           opencv
         ]
-        ++ lib.optionals pkgs.stdenv.isLinux [
+        ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
           pkgs.libGL
           pkgs.libxkbcommon
           pkgs.xorg.libX11
