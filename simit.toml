@@ -1,7 +1,7 @@
 [flake]
 scope = "full"
 mode = "custom"
-backend = "harbor-py"
+backend = "py-harbor"
 components = ["treefmt", "nix-flake-check", "uv-mypy"]
 
 [flake.expected_outputs]
