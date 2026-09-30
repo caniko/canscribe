@@ -3,13 +3,16 @@
 
   programs.alejandra.enable = true;
 
-  programs.ruff-format.enable = true;
-
   programs.taplo.enable = true;
+
+  programs.ruff-format.enable = true;
 
   programs.prettier = {
     enable = true;
     package = pkgs.prettier;
+    excludes = [
+      ".crow/**"
+    ];
     includes = [
       "*.md"
       "*.markdown"
