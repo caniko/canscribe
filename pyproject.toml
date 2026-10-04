@@ -53,7 +53,10 @@ apple = [
 cpu = [
   "torch>=2.9.1",
   "torchaudio>=2.9.1",
-  "torchvision>=0.24.1",
+  # The CPU index also contains a higher-sorting Windows ARM-only local
+  # version. Select the published Linux x86_64 CPU wheel explicitly.
+  "torchvision==0.24.1+cpu ; sys_platform == 'linux' and platform_machine == 'x86_64'",
+  "torchvision>=0.24.1 ; sys_platform != 'linux' or platform_machine != 'x86_64'",
   "onnxruntime",
 ]
 
