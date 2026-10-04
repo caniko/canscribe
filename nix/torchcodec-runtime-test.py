@@ -1,12 +1,15 @@
 """Hosted packaging gate: decode PCM audio with the selected FFmpeg backend."""
 
+import importlib
 import math
 import struct
 import tempfile
 import wave
 from pathlib import Path
 
-from torchcodec.decoders import AudioDecoder
+# Load the binary decoder at the runtime boundary under qualification. The
+# TorchCodec wheel does not ship static typing metadata.
+decoders = importlib.import_module("torchcodec.decoders")
 
 with tempfile.TemporaryDirectory() as directory:
     path = Path(directory) / "fixture.wav"
@@ -19,7 +22,7 @@ with tempfile.TemporaryDirectory() as directory:
         output.setsampwidth(2)
         output.setframerate(16000)
         output.writeframes(frames)
-    samples = AudioDecoder(str(path)).get_all_samples()
+    samples = decoders.AudioDecoder(str(path)).get_all_samples()
     assert samples.sample_rate == 16000, samples.sample_rate
     assert tuple(samples.data.shape) == (1, 1600), samples.data.shape
     assert samples.data.abs().mean().item() > 0.01
