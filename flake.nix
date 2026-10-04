@@ -9,7 +9,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-
     treefmt-nix.url = "github:numtide/treefmt-nix";
     git-hooks.url = "github:cachix/git-hooks.nix";
   };
@@ -81,13 +80,27 @@
       });
       julius = py.pythonOverrides.addSetuptools final prev "julius";
       torchaudio = py.pythonOverrides.addTorchRuntime python final prev "torchaudio";
-      torchcodec =
-        py.pythonOverrides.addTorchCodecFfmpegRuntime {
+      torchcodec = (py.pythonOverrides.addTorchCodecFfmpegRuntime {
           inherit python;
           ffmpeg = runtime.ffmpeg;
         }
         final
-        prev;
+        prev).overrideAttrs (old: {
+        # TorchCodec 0.8.1 tries FFmpeg 8, 7, 6, 5, 4 in order. This
+        # runtime provides 7; the alternative core8 libraries are optional.
+        # The offline gate decodes real audio through the selected backend.
+        autoPatchelfIgnoreMissingDeps =
+          (old.autoPatchelfIgnoreMissingDeps or [])
+          ++ [
+            "libavutil.so.60"
+            "libavcodec.so.62"
+            "libavformat.so.62"
+            "libavdevice.so.62"
+            "libavfilter.so.11"
+            "libswscale.so.9"
+            "libswresample.so.6"
+          ];
+      });
       torchvision = py.pythonOverrides.addTorchRuntime python final prev "torchvision";
     };
 
@@ -262,6 +275,7 @@
         export LD_LIBRARY_PATH=${lib.makeLibraryPath runtime.baseLibs}
         mkdir -p "$HOME" "$XDG_CACHE_HOME" "$out"
         cd ${./.}
+        ${checkEnv}/bin/python ${./nix/torchcodec-runtime-test.py}
         ${checkEnv}/bin/python -m pytest -p no:cacheprovider
         echo ok > $out/result
       '';
