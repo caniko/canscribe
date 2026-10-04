@@ -69,6 +69,22 @@ ct = "canscribe.main:main"
 # ============================================================
 
 [tool.uv]
+# TorchCodec 0.8 uses the PyTorch 2.9 ABI. Its wheels do not encode this
+# dependency, so constrain every source route, including pyannote's base deps.
+constraint-dependencies = [
+  "torch>=2.9.1,<2.10",
+  "torchaudio>=2.9.1,<2.10",
+  "torchvision>=0.24.1,<0.25",
+]
+
+# Published PyPI/egg-info metadata for the locked source-only packages.
+# Lock resolution does not need their CUDA/Cython build environments.
+dependency-metadata = [
+  { name = "flash-attn", version = "2.8.3", requires-dist = ["torch", "einops"], requires-python = ">=3.9" },
+  { name = "insightface", version = "0.7.3", requires-dist = ["Pillow", "albumentations", "cython", "easydict", "matplotlib", "numpy", "onnx", "prettytable", "requests", "scikit-image", "scikit-learn", "scipy", "tqdm"] },
+  { name = "julius", version = "0.2.7", requires-dist = ["torch>=1.7.0", "coverage; extra == 'dev'", "flake8; extra == 'dev'", "mypy; extra == 'dev'", "onnxruntime; extra == 'dev'", "resampy==0.2.2; extra == 'dev'", "pdoc3; extra == 'dev'"], requires-python = ">=3.6.0", provides-extra = ["dev"] },
+]
+
 # Platform extras are mutually exclusive
 conflicts = [
   [

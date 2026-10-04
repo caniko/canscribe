@@ -4,10 +4,12 @@ requires-python = "==3.13.*"
 resolution-markers = [
     "sys_platform == 'win32' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia'",
     "sys_platform == 'emscripten' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia'",
-    "sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia'",
+    "(platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and sys_platform == 'linux' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')",
+    "platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia'",
     "sys_platform == 'win32' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia'",
     "sys_platform == 'emscripten' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia'",
-    "sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia'",
+    "(platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and sys_platform == 'linux' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia') or (sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')",
+    "platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia'",
     "sys_platform == 'darwin' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia'",
     "sys_platform == 'win32' and extra != 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia'",
     "sys_platform == 'emscripten' and extra != 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia'",
@@ -25,6 +27,31 @@ conflicts = [[
     { package = "canscribe", extra = "cpu" },
     { package = "canscribe", extra = "nvidia" },
 ]]
+
+[manifest]
+constraints = [
+    { name = "torch", specifier = ">=2.9.1,<2.10" },
+    { name = "torchaudio", specifier = ">=2.9.1,<2.10" },
+    { name = "torchvision", specifier = ">=0.24.1,<0.25" },
+]
+
+[[manifest.dependency-metadata]]
+name = "flash-attn"
+version = "2.8.3"
+requires-dist = ["torch", "einops"]
+requires-python = ">=3.9"
+
+[[manifest.dependency-metadata]]
+name = "insightface"
+version = "0.7.3"
+requires-dist = ["pillow", "albumentations", "cython", "easydict", "matplotlib", "numpy", "onnx", "prettytable", "requests", "scikit-image", "scikit-learn", "scipy", "tqdm"]
+
+[[manifest.dependency-metadata]]
+name = "julius"
+version = "0.2.7"
+requires-dist = ["torch>=1.7.0", "coverage ; extra == 'dev'", "flake8 ; extra == 'dev'", "mypy ; extra == 'dev'", "onnxruntime ; extra == 'dev'", "resampy==0.2.2 ; extra == 'dev'", "pdoc3 ; extra == 'dev'"]
+requires-python = ">=3.6.0"
+provides-extras = ["dev"]
 
 [[package]]
 name = "aiohappyeyeballs"
@@ -154,11 +181,11 @@ version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torch", version = "2.9.1+rocm6.4", source = { registry = "https://download.pytorch.org/whl/rocm6.4" }, marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/90/fa/5c2be1f96dc179f83cdd3bb267edbd1f47d08f756785c016d5c2163901a7/asteroid-filterbanks-0.4.0.tar.gz", hash = "sha256:415f89d1dcf2b13b35f03f7a9370968ac4e6fa6800633c522dac992b283409b9", size = 24599, upload-time = "2021-04-09T20:03:07.456Z" }
@@ -252,27 +279,29 @@ amd = [
 ]
 apple = [
     { name = "onnxruntime" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" } },
-    { name = "torchaudio", version = "2.10.0", source = { registry = "https://pypi.org/simple" } },
-    { name = "torchvision", version = "0.25.0", source = { registry = "https://pypi.org/simple" } },
+    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" } },
+    { name = "torchaudio", version = "2.9.1", source = { registry = "https://pypi.org/simple" } },
+    { name = "torchvision", version = "0.24.1", source = { registry = "https://pypi.org/simple" } },
 ]
 cpu = [
     { name = "onnxruntime" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torchaudio", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torchaudio", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torchvision", version = "0.25.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torchvision", version = "0.25.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchaudio", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (platform_machine != 'aarch64' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchaudio", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (platform_python_implementation != 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu') or (sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchvision", version = "0.24.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (platform_machine != 'aarch64' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchvision", version = "0.24.1+d801a34", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (platform_python_implementation != 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu') or (sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
 ]
 flash = [
     { name = "flash-attn" },
 ]
 nvidia = [
     { name = "onnxruntime-gpu" },
-    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" } },
-    { name = "torchaudio", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" } },
-    { name = "torchvision", version = "0.25.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" } },
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" } },
+    { name = "torchaudio", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-nvidia') or (platform_machine != 'aarch64' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchaudio", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine != 'aarch64' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchvision", version = "0.24.1", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-nvidia') or (platform_machine != 'aarch64' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchvision", version = "0.24.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine != 'aarch64' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
 ]
 
 [package.dev-dependencies]
@@ -455,30 +484,6 @@ wheels = [
 ]
 
 [[package]]
-name = "cuda-bindings"
-version = "12.9.4"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "cuda-pathfinder", marker = "(sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-9-canscribe-apple') or (sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu') or (sys_platform == 'emscripten' and extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (sys_platform == 'emscripten' and extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (sys_platform == 'win32' and extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (sys_platform == 'win32' and extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/05/8b/b4b2d1c7775fa403b64333e720cfcfccef8dcb9cdeb99947061ca5a77628/cuda_bindings-12.9.4-cp313-cp313-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:cf8bfaedc238f3b115d957d1fd6562b7e8435ba57f6d0e2f87d0e7149ccb2da5", size = 11570071, upload-time = "2025-10-21T14:51:47.472Z" },
-    { url = "https://files.pythonhosted.org/packages/63/56/e465c31dc9111be3441a9ba7df1941fe98f4aa6e71e8788a3fb4534ce24d/cuda_bindings-12.9.4-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:32bdc5a76906be4c61eb98f546a6786c5773a881f3b166486449b5d141e4a39f", size = 11906628, upload-time = "2025-10-21T14:51:49.905Z" },
-    { url = "https://files.pythonhosted.org/packages/05/d0/d0e4e2e047d8e899f023fa15ad5e9894ce951253f4c894f1cd68490fdb14/cuda_bindings-12.9.4-cp313-cp313-win_amd64.whl", hash = "sha256:a2e82c8985948f953c2be51df45c3fe11c812a928fca525154fb9503190b3e64", size = 11556719, upload-time = "2025-10-21T14:51:52.248Z" },
-    { url = "https://files.pythonhosted.org/packages/ec/07/6aff13bc1e977e35aaa6b22f52b172e2890c608c6db22438cf7ed2bf43a6/cuda_bindings-12.9.4-cp313-cp313t-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:3adf4958dcf68ae7801a59b73fb00a8b37f8d0595060d66ceae111b1002de38d", size = 11566797, upload-time = "2025-10-21T14:51:54.581Z" },
-    { url = "https://files.pythonhosted.org/packages/a3/84/1e6be415e37478070aeeee5884c2022713c1ecc735e6d82d744de0252eee/cuda_bindings-12.9.4-cp313-cp313t-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:56e0043c457a99ac473ddc926fe0dc4046694d99caef633e92601ab52cbe17eb", size = 11925991, upload-time = "2025-10-21T14:51:56.535Z" },
-    { url = "https://files.pythonhosted.org/packages/4d/3c/972edfddb4ae8a9fccd3c3766ed47453b6f805b6026b32f10209dd4b8ad4/cuda_bindings-12.9.4-cp313-cp313t-win_amd64.whl", hash = "sha256:b32d8b685f0e66f5658bcf4601ef034e89fc2843582886f0a58784a4302da06c", size = 11894363, upload-time = "2025-10-21T14:51:58.633Z" },
-]
-
-[[package]]
-name = "cuda-pathfinder"
-version = "1.3.3"
-source = { registry = "https://pypi.org/simple" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/0b/02/4dbe7568a42e46582248942f54dc64ad094769532adbe21e525e4edf7bc4/cuda_pathfinder-1.3.3-py3-none-any.whl", hash = "sha256:9984b664e404f7c134954a771be8775dfd6180ea1e1aef4a5a37d4be05d9bbb1", size = 27154, upload-time = "2025-12-04T22:35:08.996Z" },
-]
-
-[[package]]
 name = "cycler"
 version = "0.12.1"
 source = { registry = "https://pypi.org/simple" }
@@ -551,11 +556,11 @@ version = "2.8.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "einops" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torch", version = "2.9.1+rocm6.4", source = { registry = "https://download.pytorch.org/whl/rocm6.4" }, marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3b/b2/8d76c41ad7974ee264754709c22963447f7f8134613fd9ce80984ed0dab7/flash_attn-2.8.3.tar.gz", hash = "sha256:1e71dd64a9e0280e0447b8a0c2541bad4bf6ac65bdeaa2f90e51a9e57de0370d", size = 8447812, upload-time = "2025-08-15T08:28:12.911Z" }
 
@@ -871,11 +876,11 @@ name = "julius"
 version = "0.2.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torch", version = "2.9.1+rocm6.4", source = { registry = "https://download.pytorch.org/whl/rocm6.4" }, marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a1/19/c9e1596b5572c786b93428d0904280e964c930fae7e6c9368ed9e1b63922/julius-0.2.7.tar.gz", hash = "sha256:3c0f5f5306d7d6016fcc95196b274cae6f07e2c9596eed314e4e7641554fbb08", size = 59640, upload-time = "2022-09-19T16:13:34.2Z" }
 
@@ -979,11 +984,11 @@ dependencies = [
     { name = "packaging" },
     { name = "pytorch-lightning" },
     { name = "pyyaml" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torch", version = "2.9.1+rocm6.4", source = { registry = "https://download.pytorch.org/whl/rocm6.4" }, marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torchmetrics" },
     { name = "tqdm" },
     { name = "typing-extensions" },
@@ -1437,11 +1442,11 @@ wheels = [
 
 [[package]]
 name = "nvidia-nvshmem-cu12"
-version = "3.4.5"
+version = "3.3.20"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1d/6a/03aa43cc9bd3ad91553a88b5f6fb25ed6a3752ae86ce2180221962bc2aa5/nvidia_nvshmem_cu12-3.4.5-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:0b48363fc6964dede448029434c6abed6c5e37f823cb43c3bcde7ecfc0457e15", size = 138936938, upload-time = "2025-09-06T00:32:05.589Z" },
-    { url = "https://files.pythonhosted.org/packages/b5/09/6ea3ea725f82e1e76684f0708bbedd871fc96da89945adeba65c3835a64c/nvidia_nvshmem_cu12-3.4.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:042f2500f24c021db8a06c5eec2539027d57460e1c1a762055a6554f72c369bd", size = 139103095, upload-time = "2025-09-06T00:32:31.266Z" },
+    { url = "https://files.pythonhosted.org/packages/92/9d/3dd98852568fb845ec1f7902c90a22b240fe1cbabda411ccedf2fd737b7b/nvidia_nvshmem_cu12-3.3.20-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:0b0b960da3842212758e4fa4696b94f129090b30e5122fea3c5345916545cff0", size = 124484616, upload-time = "2025-08-04T20:24:59.172Z" },
+    { url = "https://files.pythonhosted.org/packages/3b/6c/99acb2f9eb85c29fc6f3a7ac4dccfd992e22666dd08a642b303311326a97/nvidia_nvshmem_cu12-3.3.20-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:d00f26d3f9b2e3c3065be895e3059d6479ea5c638a3f38c9fec49b1b9dd7c1e5", size = 124657145, upload-time = "2025-08-04T20:25:19.995Z" },
 ]
 
 [[package]]
@@ -1876,17 +1881,18 @@ dependencies = [
     { name = "rich" },
     { name = "safetensors" },
     { name = "soundfile" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torch", version = "2.9.1+rocm6.4", source = { registry = "https://download.pytorch.org/whl/rocm6.4" }, marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torch-audiomentations" },
+    { name = "torchaudio", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (platform_machine != 'aarch64' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchaudio", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-nvidia') or (platform_machine != 'aarch64' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchaudio", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
+    { name = "torchaudio", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (platform_python_implementation != 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu') or (sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchaudio", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine != 'aarch64' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torchaudio", version = "2.9.1+rocm6.4", source = { registry = "https://download.pytorch.org/whl/rocm6.4" }, marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torchaudio", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torchaudio", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
-    { name = "torchaudio", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torchaudio", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torchcodec" },
     { name = "torchmetrics" },
 ]
@@ -2082,11 +2088,11 @@ dependencies = [
     { name = "lightning-utilities" },
     { name = "packaging" },
     { name = "pyyaml" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torch", version = "2.9.1+rocm6.4", source = { registry = "https://download.pytorch.org/whl/rocm6.4" }, marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torchmetrics" },
     { name = "tqdm" },
     { name = "typing-extensions" },
@@ -2103,11 +2109,11 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
     { name = "scikit-learn" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torch", version = "2.9.1+rocm6.4", source = { registry = "https://download.pytorch.org/whl/rocm6.4" }, marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "tqdm" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9b/80/6e61b1a91debf4c1b47d441f9a9d7fe2aabcdd9575ed70b2811474eb95c3/pytorch-metric-learning-2.9.0.tar.gz", hash = "sha256:27a626caf5e2876a0fd666605a78cb67ef7597e25d7a68c18053dd503830701f", size = 84530, upload-time = "2025-08-17T17:11:19.501Z" }
@@ -2600,31 +2606,7 @@ wheels = [
 
 [[package]]
 name = "torch"
-version = "2.9.1+rocm6.4"
-source = { registry = "https://download.pytorch.org/whl/rocm6.4" }
-resolution-markers = [
-    "sys_platform == 'win32'",
-    "sys_platform == 'emscripten'",
-    "sys_platform != 'emscripten' and sys_platform != 'win32'",
-]
-dependencies = [
-    { name = "filelock", marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "fsspec", marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "jinja2", marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "networkx", marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "pytorch-triton-rocm", marker = "(sys_platform == 'linux' and extra == 'extra-9-canscribe-amd') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "setuptools", marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "sympy", marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "typing-extensions", marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-]
-wheels = [
-    { url = "https://download-r2.pytorch.org/whl/rocm6.4/torch-2.9.1%2Brocm6.4-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:19ac1ef5db3f96e01172d0f62bc0438c6d3a8667358c3a00204fbbb44da74229", upload-time = "2026-01-26T16:13:03Z" },
-    { url = "https://download-r2.pytorch.org/whl/rocm6.4/torch-2.9.1%2Brocm6.4-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:435361fcc18291a725970beb21f5327b28ba809130a129587551249f22998522", upload-time = "2026-01-26T16:18:18Z" },
-]
-
-[[package]]
-name = "torch"
-version = "2.10.0"
+version = "2.9.1"
 source = { registry = "https://download.pytorch.org/whl/cpu" }
 resolution-markers = [
     "sys_platform == 'darwin'",
@@ -2639,15 +2621,13 @@ dependencies = [
     { name = "typing-extensions", marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
 ]
 wheels = [
-    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.10.0-1-cp313-none-macosx_11_0_arm64.whl", hash = "sha256:b39cafff7229699f9d6e172cac74d85fd71b568268e439e08d9c540e54732a3e", upload-time = "2026-02-06T16:27:17Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.10.0-2-cp313-none-macosx_11_0_arm64.whl", hash = "sha256:470de4176007c2700735e003a830828a88d27129032a3add07291da07e2a94e8", upload-time = "2026-02-10T19:55:43Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.10.0-cp313-cp313t-macosx_14_0_arm64.whl", hash = "sha256:339e05502b6c839db40e88720cb700f5a3b50cda332284873e851772d41b2c1e", upload-time = "2026-01-23T15:09:57Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.10.0-cp313-none-macosx_11_0_arm64.whl", hash = "sha256:840351da59cedb7bcbc51981880050813c19ef6b898a7fecf73a3afc71aff3fe", upload-time = "2026-01-23T15:09:59Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.9.1-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:8924d10d36eac8fe0652a060a03fc2ae52980841850b9a1a2ddb0f27a4f181cd", upload-time = "2026-01-23T15:12:45Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.9.1-cp313-none-macosx_11_0_arm64.whl", hash = "sha256:bcee64ae7aa65876ceeae6dcaebe75109485b213528c74939602208a20706e3f", upload-time = "2026-01-23T15:12:48Z" },
 ]
 
 [[package]]
 name = "torch"
-version = "2.10.0"
+version = "2.9.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "sys_platform == 'win32'",
@@ -2655,7 +2635,6 @@ resolution-markers = [
     "sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
-    { name = "cuda-bindings", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-9-canscribe-apple') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia') or (platform_machine != 'x86_64' and extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (platform_machine != 'x86_64' and extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (platform_machine != 'x86_64' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (sys_platform != 'linux' and extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "filelock", marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
     { name = "fsspec", marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
     { name = "jinja2", marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
@@ -2681,27 +2660,25 @@ dependencies = [
     { name = "typing-extensions", marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ec/23/2c9fe0c9c27f7f6cb865abcea8a4568f29f00acaeadfc6a37f6801f84cb4/torch-2.10.0-2-cp313-none-macosx_11_0_arm64.whl", hash = "sha256:e521c9f030a3774ed770a9c011751fb47c4d12029a3d6522116e48431f2ff89e", size = 79498254, upload-time = "2026-02-10T21:44:44.095Z" },
-    { url = "https://files.pythonhosted.org/packages/ab/c6/4dfe238342ffdcec5aef1c96c457548762d33c40b45a1ab7033bb26d2ff2/torch-2.10.0-3-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:80b1b5bfe38eb0e9f5ff09f206dcac0a87aadd084230d4a36eea5ec5232c115b", size = 915627275, upload-time = "2026-03-11T14:16:11.325Z" },
-    { url = "https://files.pythonhosted.org/packages/d8/f0/72bf18847f58f877a6a8acf60614b14935e2f156d942483af1ffc081aea0/torch-2.10.0-3-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:46b3574d93a2a8134b3f5475cfb98e2eb46771794c57015f6ad1fb795ec25e49", size = 915523474, upload-time = "2026-03-11T14:17:44.422Z" },
-    { url = "https://files.pythonhosted.org/packages/c9/6f/f2e91e34e3fcba2e3fc8d8f74e7d6c22e74e480bbd1db7bc8900fdf3e95c/torch-2.10.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:5c4d217b14741e40776dd7074d9006fd28b8a97ef5654db959d8635b2fe5f29b", size = 146004247, upload-time = "2026-01-21T16:24:29.335Z" },
-    { url = "https://files.pythonhosted.org/packages/98/fb/5160261aeb5e1ee12ee95fe599d0541f7c976c3701d607d8fc29e623229f/torch-2.10.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:6b71486353fce0f9714ca0c9ef1c850a2ae766b409808acd58e9678a3edb7738", size = 915716445, upload-time = "2026-01-21T16:22:45.353Z" },
-    { url = "https://files.pythonhosted.org/packages/6a/16/502fb1b41e6d868e8deb5b0e3ae926bbb36dab8ceb0d1b769b266ad7b0c3/torch-2.10.0-cp313-cp313-win_amd64.whl", hash = "sha256:c2ee399c644dc92ef7bc0d4f7e74b5360c37cdbe7c5ba11318dda49ffac2bc57", size = 113757050, upload-time = "2026-01-21T16:24:19.204Z" },
-    { url = "https://files.pythonhosted.org/packages/1a/0b/39929b148f4824bc3ad6f9f72a29d4ad865bcf7ebfc2fa67584773e083d2/torch-2.10.0-cp313-cp313t-macosx_14_0_arm64.whl", hash = "sha256:3202429f58309b9fa96a614885eace4b7995729f44beb54d3e4a47773649d382", size = 79851305, upload-time = "2026-01-21T16:24:09.209Z" },
-    { url = "https://files.pythonhosted.org/packages/d8/14/21fbce63bc452381ba5f74a2c0a959fdf5ad5803ccc0c654e752e0dbe91a/torch-2.10.0-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:aae1b29cd68e50a9397f5ee897b9c24742e9e306f88a807a27d617f07adb3bd8", size = 146005472, upload-time = "2026-01-21T16:22:29.022Z" },
-    { url = "https://files.pythonhosted.org/packages/54/fd/b207d1c525cb570ef47f3e9f836b154685011fce11a2f444ba8a4084d042/torch-2.10.0-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:6021db85958db2f07ec94e1bc77212721ba4920c12a18dc552d2ae36a3eb163f", size = 915612644, upload-time = "2026-01-21T16:21:47.019Z" },
-    { url = "https://files.pythonhosted.org/packages/36/53/0197f868c75f1050b199fe58f9bf3bf3aecac9b4e85cc9c964383d745403/torch-2.10.0-cp313-cp313t-win_amd64.whl", hash = "sha256:ff43db38af76fda183156153983c9a096fc4c78d0cd1e07b14a2314c7f01c2c8", size = 113997015, upload-time = "2026-01-21T16:23:00.767Z" },
-    { url = "https://files.pythonhosted.org/packages/0e/13/e76b4d9c160e89fff48bf16b449ea324bda84745d2ab30294c37c2434c0d/torch-2.10.0-cp313-none-macosx_11_0_arm64.whl", hash = "sha256:cdf2a523d699b70d613243211ecaac14fe9c5df8a0b0a9c02add60fb2a413e0f", size = 79498248, upload-time = "2026-01-21T16:23:09.315Z" },
+    { url = "https://files.pythonhosted.org/packages/20/60/8fc5e828d050bddfab469b3fe78e5ab9a7e53dda9c3bdc6a43d17ce99e63/torch-2.9.1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:c29455d2b910b98738131990394da3e50eea8291dfeb4b12de71ecf1fdeb21cb", size = 104135743, upload-time = "2025-11-12T15:21:34.936Z" },
+    { url = "https://files.pythonhosted.org/packages/f2/b7/6d3f80e6918213babddb2a37b46dbb14c15b14c5f473e347869a51f40e1f/torch-2.9.1-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:524de44cd13931208ba2c4bde9ec7741fd4ae6bfd06409a604fc32f6520c2bc9", size = 899749493, upload-time = "2025-11-12T15:24:36.356Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/47/c7843d69d6de8938c1cbb1eba426b1d48ddf375f101473d3e31a5fc52b74/torch-2.9.1-cp313-cp313-win_amd64.whl", hash = "sha256:545844cc16b3f91e08ce3b40e9c2d77012dd33a48d505aed34b7740ed627a1b2", size = 110944162, upload-time = "2025-11-12T15:21:53.151Z" },
+    { url = "https://files.pythonhosted.org/packages/28/0e/2a37247957e72c12151b33a01e4df651d9d155dd74d8cfcbfad15a79b44a/torch-2.9.1-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:5be4bf7496f1e3ffb1dd44b672adb1ac3f081f204c5ca81eba6442f5f634df8e", size = 74830751, upload-time = "2025-11-12T15:21:43.792Z" },
+    { url = "https://files.pythonhosted.org/packages/4b/f7/7a18745edcd7b9ca2381aa03353647bca8aace91683c4975f19ac233809d/torch-2.9.1-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:30a3e170a84894f3652434b56d59a64a2c11366b0ed5776fab33c2439396bf9a", size = 104142929, upload-time = "2025-11-12T15:21:48.319Z" },
+    { url = "https://files.pythonhosted.org/packages/f4/dd/f1c0d879f2863ef209e18823a988dc7a1bf40470750e3ebe927efdb9407f/torch-2.9.1-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:8301a7b431e51764629208d0edaa4f9e4c33e6df0f2f90b90e261d623df6a4e2", size = 899748978, upload-time = "2025-11-12T15:23:04.568Z" },
+    { url = "https://files.pythonhosted.org/packages/1f/9f/6986b83a53b4d043e36f3f898b798ab51f7f20fdf1a9b01a2720f445043d/torch-2.9.1-cp313-cp313t-win_amd64.whl", hash = "sha256:2e1c42c0ae92bf803a4b2409fdfed85e30f9027a66887f5e7dcdbc014c7531db", size = 111176995, upload-time = "2025-11-12T15:22:01.618Z" },
+    { url = "https://files.pythonhosted.org/packages/40/60/71c698b466dd01e65d0e9514b5405faae200c52a76901baf6906856f17e4/torch-2.9.1-cp313-none-macosx_11_0_arm64.whl", hash = "sha256:2c14b3da5df416cf9cb5efab83aa3056f5b8cd8620b8fde81b4987ecab730587", size = 74480347, upload-time = "2025-11-12T15:21:57.648Z" },
 ]
 
 [[package]]
 name = "torch"
-version = "2.10.0+cpu"
+version = "2.9.1+cpu"
 source = { registry = "https://download.pytorch.org/whl/cpu" }
 resolution-markers = [
     "sys_platform == 'win32'",
     "sys_platform == 'emscripten'",
-    "sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "(platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_python_implementation != 'CPython' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'",
 ]
 dependencies = [
     { name = "filelock", marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
@@ -2713,30 +2690,26 @@ dependencies = [
     { name = "typing-extensions", marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
 ]
 wheels = [
-    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-linux_aarch64.whl", hash = "sha256:fd215f3d0f681905c5b56b0630a3d666900a37fcc3ca5b937f95275c66f9fd9c", upload-time = "2026-01-23T15:10:34Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-linux_s390x.whl", hash = "sha256:170a0623108055be5199370335cf9b41ba6875b3cb6f086db4aee583331a4899", upload-time = "2026-01-23T15:10:35Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:e51994492cdb76edce29da88de3672a3022f9ef0ffd90345436948d4992be2c7", upload-time = "2026-01-23T15:10:37Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:8d316e5bf121f1eab1147e49ad0511a9d92e4c45cc357d1ab0bee440da71a095", upload-time = "2026-01-23T15:10:38Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-win_amd64.whl", hash = "sha256:b719da5af01b59126ac13eefd6ba3dd12d002dc0e8e79b8b365e55267a8189d3", upload-time = "2026-01-23T15:10:41Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-win_arm64.whl", hash = "sha256:b67d91326e4ed9eccbd6b7d84ed7ffa43f93103aa3f0b24145f3001f3b11b714", upload-time = "2026-01-23T15:10:42Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-linux_aarch64.whl", hash = "sha256:5af75e5f49de21b0bdf7672bc27139bd285f9e8dbcabe2d617a2eb656514ac36", upload-time = "2026-01-23T15:10:44Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-linux_s390x.whl", hash = "sha256:ba51ef01a510baf8fff576174f702c47e1aa54389a9f1fba323bb1a5003ff0bf", upload-time = "2026-01-23T15:10:48Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:0fedcb1a77e8f2aaf7bfd21591bf6d1e0b207473268c9be16b17cb7783253969", upload-time = "2026-01-23T15:10:48Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:106dd1930cb30a4a337366ba3f9b25318ebf940f51fd46f789281dd9e736bdc4", upload-time = "2026-01-23T15:10:50Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-win_amd64.whl", hash = "sha256:eb1bde1ce198f05c8770017de27e001d404499cf552aaaa014569eff56ca25c0", upload-time = "2026-01-23T15:10:50Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.9.1%2Bcpu-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:3e532e553b37ee859205a9b2d1c7977fd6922f53bbb1b9bfdd5bdc00d1a60ed4", upload-time = "2026-01-23T15:13:09Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.9.1%2Bcpu-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:39b3dff6d8fba240ae0d1bede4ca11c2531ae3b47329206512d99e17907ff74b", upload-time = "2026-01-23T15:13:12Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.9.1%2Bcpu-cp313-cp313-win_amd64.whl", hash = "sha256:404a7ab2fffaf2ca069e662f331eb46313692b2f1630df2720094284f390ccef", upload-time = "2026-01-23T15:13:13Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.9.1%2Bcpu-cp313-cp313-win_arm64.whl", hash = "sha256:161decbff26a33f13cb5ba6d2c8f458bbf56193bcc32ecc70be6dd4c7a3ee79d", upload-time = "2026-01-23T15:13:14Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.9.1%2Bcpu-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:01b1884f724977a20c7da2f640f1c7b37f4a2c117a7f4a6c1c0424d14cb86322", upload-time = "2026-01-23T15:13:16Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.9.1%2Bcpu-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:031a597147fa81b1e6d79ccf1ad3ccc7fafa27941d6cf26ff5caaa384fb20e92", upload-time = "2026-01-23T15:13:19Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.9.1%2Bcpu-cp313-cp313t-win_amd64.whl", hash = "sha256:e586ab1363e3f86aa4cc133b7fdcf98deb1d2c13d43a7a6e5a6a18e9c5364893", upload-time = "2026-01-23T15:13:20Z" },
 ]
 
 [[package]]
 name = "torch"
-version = "2.10.0+cu128"
+version = "2.9.1+cu128"
 source = { registry = "https://download.pytorch.org/whl/cu128" }
 resolution-markers = [
     "sys_platform == 'win32'",
     "sys_platform == 'emscripten'",
-    "sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "(platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_python_implementation != 'CPython' and sys_platform == 'linux') or (sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'",
 ]
 dependencies = [
-    { name = "cuda-bindings", marker = "(sys_platform == 'linux' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "filelock", marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "fsspec", marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "jinja2", marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
@@ -2762,12 +2735,36 @@ dependencies = [
     { name = "typing-extensions", marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
 ]
 wheels = [
-    { url = "https://download-r2.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:bdbcc703382f948e951c063448c9406bf38ce66c41dd698d9e2733fcf96c037a", upload-time = "2026-01-21T15:22:29Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:7b4bd23ed63de97456fcc81c26fea9f02ee02ce1112111c4dac0d8cfe574b23e", upload-time = "2026-01-21T15:22:51Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp313-cp313-win_amd64.whl", hash = "sha256:4d1b0b49c54223c7c04050b49eac141d77b6edbc34aea1dfc74a6fdb661baa8c", upload-time = "2026-01-21T15:22:54Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:f1f8b840c64b645a4bc61a393db48effb9c92b2dc26c8373873911f0750d1ea7", upload-time = "2026-01-21T15:23:28Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:23f58258012bcf1c349cb22af387e33aadca7f83ea617b080e774eb41e4fe8ff", upload-time = "2026-01-21T15:23:31Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp313-cp313t-win_amd64.whl", hash = "sha256:01b216e097b17a5277cfb47c383cdcacf06abeadcb0daca0c76b59e72854c3b6", upload-time = "2026-01-21T15:23:53Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu128/torch-2.9.1%2Bcu128-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:0b80b7555dcd0a75b7b06016991f01281a0bb078cf28fa2d1dfb949fad2fbd07", upload-time = "2026-01-26T16:54:37Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu128/torch-2.9.1%2Bcu128-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:63381a109a569b280ed3319da89d3afe5cf9ab5c879936382a212affb5c90552", upload-time = "2026-01-26T16:54:52Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu128/torch-2.9.1%2Bcu128-cp313-cp313-win_amd64.whl", hash = "sha256:ad9183864acdd99fc5143d7ca9d3d2e7ddfc9a9600ff43217825d4e5e9855ccc", upload-time = "2026-01-26T16:55:00Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu128/torch-2.9.1%2Bcu128-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:2314521c74d76e513c53bb72c0ce3511ef0295ff657a432790df6c207e5d7962", upload-time = "2026-01-26T16:55:25Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu128/torch-2.9.1%2Bcu128-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:4454a4faca31af81566e3a4208f10f20b8a6d9cfe42791b0ca7ff134326468fc", upload-time = "2026-01-26T16:55:28Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu128/torch-2.9.1%2Bcu128-cp313-cp313t-win_amd64.whl", hash = "sha256:24420e430e77136f7079354134b34e7ba9d87e539f5ac84c33b08e5c13412ebe", upload-time = "2026-01-26T16:55:48Z" },
+]
+
+[[package]]
+name = "torch"
+version = "2.9.1+rocm6.4"
+source = { registry = "https://download.pytorch.org/whl/rocm6.4" }
+resolution-markers = [
+    "sys_platform == 'win32'",
+    "sys_platform == 'emscripten'",
+    "sys_platform != 'emscripten' and sys_platform != 'win32'",
+]
+dependencies = [
+    { name = "filelock", marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "fsspec", marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "jinja2", marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "networkx", marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "pytorch-triton-rocm", marker = "(sys_platform == 'linux' and extra == 'extra-9-canscribe-amd') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "setuptools", marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "sympy", marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "typing-extensions", marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+]
+wheels = [
+    { url = "https://download-r2.pytorch.org/whl/rocm6.4/torch-2.9.1%2Brocm6.4-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:19ac1ef5db3f96e01172d0f62bc0438c6d3a8667358c3a00204fbbb44da74229", upload-time = "2026-01-26T16:13:03Z" },
+    { url = "https://download-r2.pytorch.org/whl/rocm6.4/torch-2.9.1%2Brocm6.4-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:435361fcc18291a725970beb21f5327b28ba809130a129587551249f22998522", upload-time = "2026-01-26T16:18:18Z" },
 ]
 
 [[package]]
@@ -2776,17 +2773,18 @@ version = "0.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "julius" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torch", version = "2.9.1+rocm6.4", source = { registry = "https://download.pytorch.org/whl/rocm6.4" }, marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torch-pitch-shift" },
+    { name = "torchaudio", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (platform_machine != 'aarch64' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchaudio", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-nvidia') or (platform_machine != 'aarch64' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchaudio", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
+    { name = "torchaudio", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (platform_python_implementation != 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu') or (sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchaudio", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine != 'aarch64' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torchaudio", version = "2.9.1+rocm6.4", source = { registry = "https://download.pytorch.org/whl/rocm6.4" }, marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torchaudio", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torchaudio", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
-    { name = "torchaudio", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torchaudio", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/31/8d/2f8fd7e34c75f5ee8de4310c3bd3f22270acd44d1f809e2fe7c12fbf35f8/torch_audiomentations-0.12.0.tar.gz", hash = "sha256:b02d4c5eb86376986a53eb405cca5e34f370ea9284411237508e720c529f7888", size = 52094, upload-time = "2025-01-15T09:07:01.071Z" }
 wheels = [
@@ -2800,20 +2798,116 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "packaging" },
     { name = "primepy" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torch", version = "2.9.1+rocm6.4", source = { registry = "https://download.pytorch.org/whl/rocm6.4" }, marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchaudio", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (platform_machine != 'aarch64' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchaudio", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-nvidia') or (platform_machine != 'aarch64' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchaudio", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
+    { name = "torchaudio", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (platform_python_implementation != 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu') or (sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torchaudio", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine != 'aarch64' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torchaudio", version = "2.9.1+rocm6.4", source = { registry = "https://download.pytorch.org/whl/rocm6.4" }, marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torchaudio", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torchaudio", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
-    { name = "torchaudio", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torchaudio", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/79/a6/722a832bca75d5079f6731e005b3d0c2eec7c6c6863d030620952d143d57/torch_pitch_shift-1.2.5.tar.gz", hash = "sha256:6e1c7531f08d0f407a4c55e5ff8385a41355c5c5d27ab7fa08632e51defbd0ed", size = 4725, upload-time = "2024-09-25T19:10:12.922Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/27/4c/96ac2a09efb56cc3c41fb3ce9b6f4d8c0604499f7481d4a13a7b03e21382/torch_pitch_shift-1.2.5-py3-none-any.whl", hash = "sha256:6f8500cbc13f1c98b11cde1805ce5084f82cdd195c285f34287541f168a7c6a7", size = 5005, upload-time = "2024-09-25T19:10:11.521Z" },
+]
+
+[[package]]
+name = "torchaudio"
+version = "2.9.1"
+source = { registry = "https://download.pytorch.org/whl/cpu" }
+resolution-markers = [
+    "platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'",
+    "sys_platform == 'darwin'",
+]
+dependencies = [
+    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (platform_machine != 'aarch64' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+]
+wheels = [
+    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.9.1-cp313-cp313-macosx_12_0_arm64.whl", hash = "sha256:1c521e9f70fab2e825f6b831ac314a79dc37f51c8d11cd5498c0f3c880a122e1", upload-time = "2025-11-11T19:16:58Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.9.1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:0b3fecc6bcfe46fcb905ea826ef63e9a052a6d9d1e2cd713f59a53a509fc8b5c", upload-time = "2025-11-11T19:16:58Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.9.1-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:976c4106f9f1d86ecd74c1a6e1fbf903403f2a37547ba2ece262f82b0daae300", upload-time = "2025-11-11T19:16:58Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.9.1-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:f5b0595fa19ee8c5ac6a997c0d14b662d9c92a08c43771698ae4c9e3f2273fdf", upload-time = "2025-11-11T19:16:58Z" },
+]
+
+[[package]]
+name = "torchaudio"
+version = "2.9.1"
+source = { registry = "https://download.pytorch.org/whl/cu128" }
+resolution-markers = [
+    "platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'",
+]
+dependencies = [
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-nvidia') or (platform_machine != 'aarch64' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+]
+wheels = [
+    { url = "https://download-r2.pytorch.org/whl/cu128/torchaudio-2.9.1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:ea6fe3b9525493df0a5eb5eed5c22925065b5830f6999980ed76bb36c4592d34", upload-time = "2025-11-11T19:17:09Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu128/torchaudio-2.9.1-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:9d3cfd604a617a245d26a5381ad7d669047ac1c152896227d8a006aad12151f8", upload-time = "2025-11-11T19:17:09Z" },
+]
+
+[[package]]
+name = "torchaudio"
+version = "2.9.1"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "sys_platform == 'win32'",
+    "sys_platform == 'emscripten'",
+    "sys_platform != 'emscripten' and sys_platform != 'win32'",
+]
+dependencies = [
+    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c0/1b/3321ad6379ac2d968064704e8d015c31ccae5d1ece070f87fb44b17d90e6/torchaudio-2.9.1-cp313-cp313-macosx_12_0_arm64.whl", hash = "sha256:bb69557484c92513a980027ec4cb314b0f43cf4442bbfd97440e66528dbad22d", size = 808136, upload-time = "2025-11-12T15:26:00.276Z" },
+    { url = "https://files.pythonhosted.org/packages/76/e2/fe55b3882157fd57aa131f5bcad90f0329be90827e1c0e0c482662ddef38/torchaudio-2.9.1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:ba2799ceec5e4373a0aa26df30d608f1eaaefd8ac4a7ae0c3446f63106f5b5a5", size = 474349, upload-time = "2025-11-12T15:26:02.78Z" },
+    { url = "https://files.pythonhosted.org/packages/74/d3/0b090c03cac5a20691507e0945589a696fb10402ccd2457eea47dbf8a71b/torchaudio-2.9.1-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:bc3c8e9a240bfad8bc61f769324a4f3ce5d60eec161369d457c595c35dbb10c7", size = 2060343, upload-time = "2025-11-12T15:26:03.88Z" },
+    { url = "https://files.pythonhosted.org/packages/a0/db/2555cfd428f4bf09a4df1c6f9204d0acc217c46edb35776c16e7a2a9a1c9/torchaudio-2.9.1-cp313-cp313-win_amd64.whl", hash = "sha256:13ee96ea9bbbc85e198cb671273af06f010e6981d7b912d001eef6bc74e23f4f", size = 665301, upload-time = "2025-11-12T15:26:04.952Z" },
+    { url = "https://files.pythonhosted.org/packages/0c/58/e82d8b5f447abdddc950965f1395f36baef3602643dd069100c6369ba73e/torchaudio-2.9.1-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:9290f6a6409deb1f9113d5aef97ec646eeee6410b6bcc57ab8b57066b54da7c1", size = 813456, upload-time = "2025-11-12T15:26:13.963Z" },
+    { url = "https://files.pythonhosted.org/packages/ce/45/dd9ad6af9bb595095cd98028d270f933760968b92a3497282e31289ef3b4/torchaudio-2.9.1-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:eeae7ca60b64c4bfb78fbd104a089d072b151423d5d2f90da1da00787f03b800", size = 476577, upload-time = "2025-11-12T15:26:09.54Z" },
+    { url = "https://files.pythonhosted.org/packages/79/97/c49aeb01d8a9ced2b8215a38b69b8eafd1afe295a487a73b7030c6ff3396/torchaudio-2.9.1-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:5f445e896215e6f7bba497dc68aab1e6cb077ae0ab3a90095067f16df6a9bb98", size = 2062158, upload-time = "2025-11-12T15:26:10.487Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/70/30b2a0ecca2a0a5e6a8cee8952fdea3872854ea5bcd86fe3df369fdc2543/torchaudio-2.9.1-cp313-cp313t-win_amd64.whl", hash = "sha256:c558ba70d548f7491245ed7a35310f6310d83fc7591f073ab5fed9fd38cef987", size = 669253, upload-time = "2025-11-12T15:26:06.285Z" },
+]
+
+[[package]]
+name = "torchaudio"
+version = "2.9.1+cpu"
+source = { registry = "https://download.pytorch.org/whl/cpu" }
+resolution-markers = [
+    "sys_platform == 'win32'",
+    "sys_platform == 'emscripten'",
+    "(platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_python_implementation != 'CPython' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+]
+dependencies = [
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (platform_python_implementation != 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu') or (sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+]
+wheels = [
+    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.9.1%2Bcpu-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:c3cb189e9b30ff639535c1152056cc2523aecf139978f2b9b89109e2d376909e", upload-time = "2025-11-11T19:16:58Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.9.1%2Bcpu-cp313-cp313-win_amd64.whl", hash = "sha256:f5426c7766f1e6aae0f2e59967292b9c3a3a21012e12ac7dcfd138a489eca4c7", upload-time = "2025-11-11T19:16:58Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.9.1%2Bcpu-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:386141130d1f054225e483cfaa942fe0219f1340d737de9018417452b42cf994", upload-time = "2025-11-11T19:16:59Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.9.1%2Bcpu-cp313-cp313t-win_amd64.whl", hash = "sha256:0306bc184da793ffbfd6ae4ef32ab39215f64f4155c762f4c54970a991638bb5", upload-time = "2025-11-11T19:16:58Z" },
+]
+
+[[package]]
+name = "torchaudio"
+version = "2.9.1+cu128"
+source = { registry = "https://download.pytorch.org/whl/cu128" }
+resolution-markers = [
+    "sys_platform == 'win32'",
+    "sys_platform == 'emscripten'",
+    "(platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_python_implementation != 'CPython' and sys_platform == 'linux') or (sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+]
+dependencies = [
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine != 'aarch64' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+]
+wheels = [
+    { url = "https://download-r2.pytorch.org/whl/cu128/torchaudio-2.9.1%2Bcu128-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:52297b7dfb7c42e311385572bc9c0186e602ea1a5f20c42923765baea99aff83", upload-time = "2025-11-11T19:17:09Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu128/torchaudio-2.9.1%2Bcu128-cp313-cp313-win_amd64.whl", hash = "sha256:abb0ee5a40c883ad17d90cdd45965c06deef42a0a2ffc58c51e32729642292f0", upload-time = "2025-11-11T19:17:09Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu128/torchaudio-2.9.1%2Bcu128-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:ddc7410908858693d3b81346f53b5e5e51f987b3b7128978be6c774314377204", upload-time = "2025-11-11T19:17:09Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu128/torchaudio-2.9.1%2Bcu128-cp313-cp313t-win_amd64.whl", hash = "sha256:9d29dc3a2e0c43da66d33bcb9e22ad58c58f0ae1b6dcfe2d8d94bda279ddcf89", upload-time = "2025-11-11T19:17:09Z" },
 ]
 
 [[package]]
@@ -2834,88 +2928,6 @@ wheels = [
 ]
 
 [[package]]
-name = "torchaudio"
-version = "2.10.0"
-source = { registry = "https://download.pytorch.org/whl/cpu" }
-resolution-markers = [
-    "sys_platform == 'darwin'",
-]
-dependencies = [
-    { name = "torch", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-]
-wheels = [
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.10.0-cp313-cp313-macosx_12_0_arm64.whl", hash = "sha256:bd2a7607860798e584747d7356b3f11b43ada695b264215ce5a7b6f68fe0f355", upload-time = "2026-01-21T15:05:38Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.10.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:dd8ed1b729b4694f01776ae95e7db432b1a808db4377f99596fe74c24ccba2be", upload-time = "2026-01-21T15:05:38Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.10.0-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:6d7a796de0b2e1246a468aed0cd7aef136bb7a8d6171c07e97b478b1b2a41e5f", upload-time = "2026-01-21T15:05:38Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.10.0-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:8bec0eb0762379d6eb38878ea0a4c7fd8f73dbc6e249b67e1e706c1287a87ef0", upload-time = "2026-01-21T15:05:38Z" },
-]
-
-[[package]]
-name = "torchaudio"
-version = "2.10.0"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "sys_platform == 'win32'",
-    "sys_platform == 'emscripten'",
-    "sys_platform != 'emscripten' and sys_platform != 'win32'",
-]
-dependencies = [
-    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b6/02/341e7bd588355f82c5180103cb2f8070a72ab1be920ab27553a1135d4aa6/torchaudio-2.10.0-cp313-cp313-macosx_12_0_arm64.whl", hash = "sha256:8fd38d28ee150c584d3ee3b05f39e021f0ad8a8ec8fec1f26dfe150c9db9b2f5", size = 737164, upload-time = "2026-01-21T16:28:38.354Z" },
-    { url = "https://files.pythonhosted.org/packages/49/fd/831c2595c81b17141180ca11ab3c0836cc544ef13e15aa0e7b2cb619e582/torchaudio-2.10.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:5bc39ff3ea341097ce1ab023dd88c9dd8ca5f96ebf48821e7d23766137bb55d7", size = 392757, upload-time = "2026-01-21T16:28:33.631Z" },
-    { url = "https://files.pythonhosted.org/packages/8e/d8/405c80c57dc68ca5855bddfaae57c3d84ea7397bf1eb2aa5d59c9fa1d3a9/torchaudio-2.10.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:3057c4286db5673d266124a2a10ca54e19f516772e9057f44573a7da5b85e328", size = 1897099, upload-time = "2026-01-21T16:28:24.793Z" },
-    { url = "https://files.pythonhosted.org/packages/73/cf/0e48d67788c935e3b3d00e6f55a930a54a67f432e04c33ef80a38cb764fd/torchaudio-2.10.0-cp313-cp313-win_amd64.whl", hash = "sha256:99e74d1901742bc10961d807fe75c0dd9496f4a4a4ff4bb317c5de4a0b6f24e6", size = 475476, upload-time = "2026-01-21T16:28:28.249Z" },
-    { url = "https://files.pythonhosted.org/packages/48/29/30bcce0f17a8279b051b09250993691a828f89a03278306b23571c18df04/torchaudio-2.10.0-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:6cfe98ef0ea9bee6d6297493ce67ce0c54a38d80caf6535a3ae48900fd5f3769", size = 742449, upload-time = "2026-01-21T16:28:29.556Z" },
-    { url = "https://files.pythonhosted.org/packages/43/8c/653e7f67855424bf3b7cbb48335f8316f7fb02bb01a6cab38f6bf9555676/torchaudio-2.10.0-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:b41b254d958632dc00dc7768431cadda516c91641d798775cbb19bcd4f0d2be4", size = 393430, upload-time = "2026-01-21T16:28:34.855Z" },
-    { url = "https://files.pythonhosted.org/packages/8e/1f/f91fcb9dd47a19b720fb48042a2f6f023651948e73726e98fff60d5ed5c7/torchaudio-2.10.0-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:da1081d1018a1e95f5a13947402aeb037cf5ac8861219a6164df004898a96bb1", size = 1897271, upload-time = "2026-01-21T16:28:23.519Z" },
-    { url = "https://files.pythonhosted.org/packages/57/27/270c26890f43838e8faa5d3e52f079bd9d9d09f9a535a11cf6b94e20ed21/torchaudio-2.10.0-cp313-cp313t-win_amd64.whl", hash = "sha256:f1afa53146a5655258d3a86e689c6879dfe78581d9bee9ef611ace98722f86bb", size = 478966, upload-time = "2026-01-21T16:28:32.491Z" },
-]
-
-[[package]]
-name = "torchaudio"
-version = "2.10.0+cpu"
-source = { registry = "https://download.pytorch.org/whl/cpu" }
-resolution-markers = [
-    "sys_platform == 'win32'",
-    "sys_platform == 'emscripten'",
-    "sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-]
-dependencies = [
-    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-]
-wheels = [
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.10.0%2Bcpu-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:5a7ab98c247753ee09fb9193cd6acef7884643134c3b1ef31fe30acde10344d1", upload-time = "2026-01-21T15:05:37Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.10.0%2Bcpu-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:9b07ad143c5d7727a48aa6923991b8d7a06a6b3c78dedee6a1aa46ff16ad3db2", upload-time = "2026-01-21T15:05:37Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.10.0%2Bcpu-cp313-cp313-win_amd64.whl", hash = "sha256:ef9a3bc9c0dcbb766775f60bb4e1f5dc02801db0367bc45a6c76e98e041968af", upload-time = "2026-01-21T15:05:37Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.10.0%2Bcpu-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:6b95eb81b3960961c419b48b321d5dd837f696067ae4adc2bbb431c8b3737366", upload-time = "2026-01-21T15:05:37Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.10.0%2Bcpu-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:eeb02bee18b0a98a5f6ea2bceebb3bf3176fbadfe9fcb9fa062d9387d8fecc17", upload-time = "2026-01-21T15:05:37Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.10.0%2Bcpu-cp313-cp313t-win_amd64.whl", hash = "sha256:35763804fc32eb5d108ba49b75dd8cc09ae0892070dc528ef6beed6a3d923c7f", upload-time = "2026-01-21T15:05:38Z" },
-]
-
-[[package]]
-name = "torchaudio"
-version = "2.10.0+cu128"
-source = { registry = "https://download.pytorch.org/whl/cu128" }
-resolution-markers = [
-    "sys_platform == 'win32'",
-    "sys_platform == 'emscripten'",
-    "sys_platform != 'emscripten' and sys_platform != 'win32'",
-]
-dependencies = [
-    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-]
-wheels = [
-    { url = "https://download-r2.pytorch.org/whl/cu128/torchaudio-2.10.0%2Bcu128-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:2a0608579d4e8ecc951cc34c4a7b4edacac8ad32e00d809fa89589cd7f98fd63", upload-time = "2026-01-21T15:05:48Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu128/torchaudio-2.10.0%2Bcu128-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:d7c6ba8e513b94cd9d5f43eed4780737ef1b50941df112adfb5f401c1b216b7a", upload-time = "2026-01-21T15:05:48Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu128/torchaudio-2.10.0%2Bcu128-cp313-cp313-win_amd64.whl", hash = "sha256:7c819ba73bdad53008238bdf7609c6f0807effe344f7bdc51a9cab397d988766", upload-time = "2026-01-21T15:05:48Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu128/torchaudio-2.10.0%2Bcu128-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:c0093580702055734f3facb06aa8bede3f090ba626fb3bfcb280e155058a7f6e", upload-time = "2026-01-21T15:05:48Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu128/torchaudio-2.10.0%2Bcu128-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:1529792164ebd43bb973a0464326a333ada488c65b61e833d00b1ef82dc28d36", upload-time = "2026-01-21T15:05:48Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu128/torchaudio-2.10.0%2Bcu128-cp313-cp313t-win_amd64.whl", hash = "sha256:0dcb78ddc06439410a12da8317f38b59fc1a810eea8284589bc00178ed09183d", upload-time = "2026-01-21T15:05:48Z" },
-]
-
-[[package]]
 name = "torchcodec"
 version = "0.8.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2933,15 +2945,117 @@ dependencies = [
     { name = "lightning-utilities" },
     { name = "numpy" },
     { name = "packaging" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
     { name = "torch", version = "2.9.1+rocm6.4", source = { registry = "https://download.pytorch.org/whl/rocm6.4" }, marker = "extra == 'extra-9-canscribe-amd' or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-canscribe-apple' or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-cpu' and extra != 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia')" },
-    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra != 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra != 'extra-9-canscribe-amd' and extra != 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/85/2e/48a887a59ecc4a10ce9e8b35b3e3c5cef29d902c4eac143378526e7485cb/torchmetrics-1.8.2.tar.gz", hash = "sha256:cf64a901036bf107f17a524009eea7781c9c5315d130713aeca5747a686fe7a5", size = 580679, upload-time = "2025-09-03T14:00:54.077Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/02/21/aa0f434434c48490f91b65962b1ce863fdcce63febc166ca9fe9d706c2b6/torchmetrics-1.8.2-py3-none-any.whl", hash = "sha256:08382fd96b923e39e904c4d570f3d49e2cc71ccabd2a94e0f895d1f0dac86242", size = 983161, upload-time = "2025-09-03T14:00:51.921Z" },
+]
+
+[[package]]
+name = "torchvision"
+version = "0.24.1"
+source = { registry = "https://download.pytorch.org/whl/cpu" }
+resolution-markers = [
+    "platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'",
+    "sys_platform == 'darwin'",
+]
+dependencies = [
+    { name = "numpy", marker = "(platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux') or sys_platform == 'darwin'" },
+    { name = "pillow", marker = "(platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux') or sys_platform == 'darwin'" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-9-canscribe-cpu') or (platform_machine != 'aarch64' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (platform_python_implementation != 'CPython' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (sys_platform != 'linux' and extra == 'extra-9-canscribe-cpu' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-apple') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-amd' and extra == 'extra-9-canscribe-nvidia') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-cpu') or (extra == 'extra-9-canscribe-apple' and extra == 'extra-9-canscribe-nvidia')" },
+]
+wheels = [
+    { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.24.1-cp313-cp313-macosx_12_0_arm64.whl", hash = "sha256:c858f944efea2170acbda2f801613b15193be49e8419c98c204e9f5e8c65a955", upload-time = "2025-11-15T18:12:46Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.24.1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:59ddbe5779943af99a897fcd5894757ae7cffeb1c25a519b79cd9338188a8664", upload-time = "2025-11-15T18:12:46Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.24.1-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:fff7b030a51c0b96ed0a7a163e9ccd23d4d1b6bb406decaba7ac25933f73ef91", upload-time = "2025-11-15T18:12:46Z" },
+    { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.24.1-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:0227e8cb5a418ab47e0ed0f70e0ea2fea2febb54b31ced8cd753d2efb49551df", upload-time = "2025-11-15T18:12:46Z" },
+]
+
+[[package]]
+name = "torchvision"
+version = "0.24.1"
+source = { registry = "https://download.pytorch.org/whl/cu128" }
+resolution-markers = [
+    "platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'",
+]
+dependencies = [
+    { name = "numpy", marker = "platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'" },
+    { name = "pillow", marker = "platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'" },
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'" },
+]
+wheels = [
+    { url = "https://download-r2.pytorch.org/whl/cu128/torchvision-0.24.1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:7695d95e4e4c25fe1af3b880ffcd2dbcaa43cce7fd7edbe0157305b837c1dcf8", upload-time = "2026-01-26T17:33:32Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu128/torchvision-0.24.1-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:9db0306f8eec7dc11745044c78dc49a80b84cc0935e36575677cdc2bce9be23c", upload-time = "2026-01-26T17:33:33Z" },
+]
+
+[[package]]
+name = "torchvision"
+version = "0.24.1"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "sys_platform == 'win32'",
+    "sys_platform == 'emscripten'",
+    "sys_platform != 'emscripten' and sys_platform != 'win32'",
+]
+dependencies = [
+    { name = "numpy" },
+    { name = "pillow" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" } },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e4/97/ab40550f482577f2788304c27220e8ba02c63313bd74cf2f8920526aac20/torchvision-0.24.1-cp313-cp313-macosx_12_0_arm64.whl", hash = "sha256:8a6696db7fb71eadb2c6a48602106e136c785642e598eb1533e0b27744f2cce6", size = 1891435, upload-time = "2025-11-12T15:25:28.642Z" },
+    { url = "https://files.pythonhosted.org/packages/30/65/ac0a3f9be6abdbe4e1d82c915d7e20de97e7fd0e9a277970508b015309f3/torchvision-0.24.1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:db2125c46f9cb25dc740be831ce3ce99303cfe60439249a41b04fd9f373be671", size = 2338718, upload-time = "2025-11-12T15:25:26.19Z" },
+    { url = "https://files.pythonhosted.org/packages/10/b5/5bba24ff9d325181508501ed7f0c3de8ed3dd2edca0784d48b144b6c5252/torchvision-0.24.1-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:f035f0cacd1f44a8ff6cb7ca3627d84c54d685055961d73a1a9fb9827a5414c8", size = 8049661, upload-time = "2025-11-12T15:25:22.558Z" },
+    { url = "https://files.pythonhosted.org/packages/5c/ec/54a96ae9ab6a0dd66d4bba27771f892e36478a9c3489fa56e51c70abcc4d/torchvision-0.24.1-cp313-cp313-win_amd64.whl", hash = "sha256:16274823b93048e0a29d83415166a2e9e0bf4e1b432668357b657612a4802864", size = 4319808, upload-time = "2025-11-12T15:25:17.318Z" },
+    { url = "https://files.pythonhosted.org/packages/d5/f3/a90a389a7e547f3eb8821b13f96ea7c0563cdefbbbb60a10e08dda9720ff/torchvision-0.24.1-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:e3f96208b4bef54cd60e415545f5200346a65024e04f29a26cd0006dbf9e8e66", size = 2005342, upload-time = "2025-11-12T15:25:11.871Z" },
+    { url = "https://files.pythonhosted.org/packages/a9/fe/ff27d2ed1b524078164bea1062f23d2618a5fc3208e247d6153c18c91a76/torchvision-0.24.1-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:f231f6a4f2aa6522713326d0d2563538fa72d613741ae364f9913027fa52ea35", size = 2341708, upload-time = "2025-11-12T15:25:25.08Z" },
+    { url = "https://files.pythonhosted.org/packages/b1/b9/d6c903495cbdfd2533b3ef6f7b5643ff589ea062f8feb5c206ee79b9d9e5/torchvision-0.24.1-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:1540a9e7f8cf55fe17554482f5a125a7e426347b71de07327d5de6bfd8d17caa", size = 8177239, upload-time = "2025-11-12T15:25:18.554Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/2b/ba02e4261369c3798310483028495cf507e6cb3f394f42e4796981ecf3a7/torchvision-0.24.1-cp313-cp313t-win_amd64.whl", hash = "sha256:d83e16d70ea85d2f196d678bfb702c36be7a655b003abed84e465988b6128938", size = 4251604, upload-time = "2025-11-12T15:25:34.069Z" },
+]
+
+[[package]]
+name = "torchvision"
+version = "0.24.1+cu128"
+source = { registry = "https://download.pytorch.org/whl/cu128" }
+resolution-markers = [
+    "sys_platform == 'win32'",
+    "sys_platform == 'emscripten'",
+    "(platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_python_implementation != 'CPython' and sys_platform == 'linux') or (sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+]
+dependencies = [
+    { name = "numpy", marker = "platform_machine != 'aarch64' or platform_python_implementation != 'CPython' or sys_platform != 'linux'" },
+    { name = "pillow", marker = "platform_machine != 'aarch64' or platform_python_implementation != 'CPython' or sys_platform != 'linux'" },
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "platform_machine != 'aarch64' or platform_python_implementation != 'CPython' or sys_platform != 'linux'" },
+]
+wheels = [
+    { url = "https://download-r2.pytorch.org/whl/cu128/torchvision-0.24.1%2Bcu128-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:5f7c5e0fa08d2cbee93b6e04bbedd59b5e11462cff6cefd07949217265df2370", upload-time = "2025-11-15T18:12:55Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu128/torchvision-0.24.1%2Bcu128-cp313-cp313-win_amd64.whl", hash = "sha256:c38b0ece839de439de81ed0e81e915c200975972c0b9419608fa9568aa74ecec", upload-time = "2025-11-15T20:06:10Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu128/torchvision-0.24.1%2Bcu128-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:5ae2dc0f582215b078d7fd52410fe51f79b801770c53e7cfb8ad04316283017d", upload-time = "2025-11-15T18:12:55Z" },
+    { url = "https://download-r2.pytorch.org/whl/cu128/torchvision-0.24.1%2Bcu128-cp313-cp313t-win_amd64.whl", hash = "sha256:b50d48f4074039e6067230f123f55404014b849d7c4fe1dac3a1924ea02bbd78", upload-time = "2025-11-15T20:06:09Z" },
+]
+
+[[package]]
+name = "torchvision"
+version = "0.24.1+d801a34"
+source = { registry = "https://download.pytorch.org/whl/cpu" }
+resolution-markers = [
+    "sys_platform == 'win32'",
+    "sys_platform == 'emscripten'",
+    "(platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_python_implementation != 'CPython' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+]
+dependencies = [
+    { name = "numpy", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_python_implementation != 'CPython' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
+    { name = "pillow", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_python_implementation != 'CPython' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_python_implementation != 'CPython' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
+]
+wheels = [
+    { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.24.1%2Bd801a34-cp313-cp313-win_arm64.whl", hash = "sha256:a94e23ae2d5f27000152d199d32871a4b4d800c71832d7980a60c3f499f87a9c", upload-time = "2025-11-15T18:12:45Z" },
 ]
 
 [[package]]
@@ -2961,94 +3075,6 @@ dependencies = [
 wheels = [
     { url = "https://download-r2.pytorch.org/whl/rocm6.4/torchvision-0.24.1%2Brocm6.4-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:fd183cfb90fd9ed7a952bbe63f51d5da0609d0bc9c6bbfb183a536d808e48cae", upload-time = "2025-11-15T18:13:05Z" },
     { url = "https://download-r2.pytorch.org/whl/rocm6.4/torchvision-0.24.1%2Brocm6.4-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:478c1553c65b73e058154b2f64a87a954937d12e2025d6b04a36d3d5be362edc", upload-time = "2025-11-15T18:13:05Z" },
-]
-
-[[package]]
-name = "torchvision"
-version = "0.25.0"
-source = { registry = "https://download.pytorch.org/whl/cpu" }
-resolution-markers = [
-    "sys_platform == 'darwin'",
-]
-dependencies = [
-    { name = "numpy", marker = "sys_platform == 'darwin'" },
-    { name = "pillow", marker = "sys_platform == 'darwin'" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform == 'darwin'" },
-]
-wheels = [
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.25.0-cp313-cp313-macosx_12_0_arm64.whl", hash = "sha256:6c444119c6af8fa48b79c59f1529fc15a45a2bbf823cf85f851e7203d84f727f", upload-time = "2026-01-20T18:32:31Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.25.0-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:80895a40faa5783ce19ed5a692a54062c7888a385490e866324355f8d59b2eb3", upload-time = "2026-01-20T18:32:31Z" },
-]
-
-[[package]]
-name = "torchvision"
-version = "0.25.0"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "sys_platform == 'win32'",
-    "sys_platform == 'emscripten'",
-    "sys_platform != 'emscripten' and sys_platform != 'win32'",
-]
-dependencies = [
-    { name = "numpy" },
-    { name = "pillow" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" } },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f5/5b/1562a04a6a5a4cf8cf40016a0cdeda91ede75d6962cff7f809a85ae966a5/torchvision-0.25.0-cp313-cp313-macosx_12_0_arm64.whl", hash = "sha256:24e11199e4d84ba9c5ee7825ebdf1cd37ce8deec225117f10243cae984ced3ec", size = 1874918, upload-time = "2026-01-21T16:27:39.02Z" },
-    { url = "https://files.pythonhosted.org/packages/36/b1/3d6c42f62c272ce34fcce609bb8939bdf873dab5f1b798fd4e880255f129/torchvision-0.25.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:5f271136d2d2c0b7a24c5671795c6e4fd8da4e0ea98aeb1041f62bc04c4370ef", size = 2309106, upload-time = "2026-01-21T16:27:30.624Z" },
-    { url = "https://files.pythonhosted.org/packages/c7/60/59bb9c8b67cce356daeed4cb96a717caa4f69c9822f72e223a0eae7a9bd9/torchvision-0.25.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:855c0dc6d37f462482da7531c6788518baedca1e0847f3df42a911713acdfe52", size = 8071522, upload-time = "2026-01-21T16:27:29.392Z" },
-    { url = "https://files.pythonhosted.org/packages/32/a5/9a9b1de0720f884ea50dbf9acb22cbe5312e51d7b8c4ac6ba9b51efd9bba/torchvision-0.25.0-cp313-cp313-win_amd64.whl", hash = "sha256:cef0196be31be421f6f462d1e9da1101be7332d91984caa6f8022e6c78a5877f", size = 4321911, upload-time = "2026-01-21T16:27:35.195Z" },
-    { url = "https://files.pythonhosted.org/packages/52/99/dca81ed21ebaeff2b67cc9f815a20fdaa418b69f5f9ea4c6ed71721470db/torchvision-0.25.0-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:a8f8061284395ce31bcd460f2169013382ccf411148ceb2ee38e718e9860f5a7", size = 1896209, upload-time = "2026-01-21T16:27:32.159Z" },
-    { url = "https://files.pythonhosted.org/packages/28/cc/2103149761fdb4eaed58a53e8437b2d716d48f05174fab1d9fcf1e2a2244/torchvision-0.25.0-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:146d02c9876858420adf41f3189fe90e3d6a409cbfa65454c09f25fb33bf7266", size = 2310735, upload-time = "2026-01-21T16:27:22.327Z" },
-    { url = "https://files.pythonhosted.org/packages/76/ad/f4c985ad52ddd3b22711c588501be1b330adaeaf6850317f66751711b78c/torchvision-0.25.0-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:c4d395cb2c4a2712f6eb93a34476cdf7aae74bb6ea2ea1917f858e96344b00aa", size = 8089557, upload-time = "2026-01-21T16:27:27.666Z" },
-    { url = "https://files.pythonhosted.org/packages/63/cc/0ea68b5802e5e3c31f44b307e74947bad5a38cc655231d845534ed50ddb8/torchvision-0.25.0-cp313-cp313t-win_amd64.whl", hash = "sha256:5e6b449e9fa7d642142c0e27c41e5a43b508d57ed8e79b7c0a0c28652da8678c", size = 4344260, upload-time = "2026-01-21T16:27:17.018Z" },
-]
-
-[[package]]
-name = "torchvision"
-version = "0.25.0+cpu"
-source = { registry = "https://download.pytorch.org/whl/cpu" }
-resolution-markers = [
-    "sys_platform == 'win32'",
-    "sys_platform == 'emscripten'",
-    "sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-]
-dependencies = [
-    { name = "numpy", marker = "sys_platform != 'darwin'" },
-    { name = "pillow", marker = "sys_platform != 'darwin'" },
-    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform != 'darwin'" },
-]
-wheels = [
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.25.0%2Bcpu-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:fe54cbd5942cd0b26a90f1748f0d4421caf67be35c281c6c3b8573733a03d630", upload-time = "2026-01-20T18:32:30Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.25.0%2Bcpu-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:90eec299e1f82cfaf080ccb789df3838cb9a54b57e2ebe33852cd392c692de5c", upload-time = "2026-01-20T18:32:30Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.25.0%2Bcpu-cp313-cp313-win_amd64.whl", hash = "sha256:783c8fc580bbfc159bff52f4f72cdd538e42b32956e70dffa42b940db114e151", upload-time = "2026-01-20T18:32:30Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.25.0%2Bcpu-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:e985e12a9a232618e5a43476de5689e4b14989f5da6b93909c57afa57ec27012", upload-time = "2026-01-20T18:32:30Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.25.0%2Bcpu-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:813f0106eb3e268f3783da67b882458e544c6fb72f946e6ca64b5ed4e62c6a77", upload-time = "2026-01-20T18:32:30Z" },
-    { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.25.0%2Bcpu-cp313-cp313t-win_amd64.whl", hash = "sha256:9212210f417888e6261c040495180f053084812cf873dedba9fc51ff4b24b2d3", upload-time = "2026-01-20T18:32:30Z" },
-]
-
-[[package]]
-name = "torchvision"
-version = "0.25.0+cu128"
-source = { registry = "https://download.pytorch.org/whl/cu128" }
-resolution-markers = [
-    "sys_platform == 'win32'",
-    "sys_platform == 'emscripten'",
-    "sys_platform != 'emscripten' and sys_platform != 'win32'",
-]
-dependencies = [
-    { name = "numpy" },
-    { name = "pillow" },
-    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" } },
-]
-wheels = [
-    { url = "https://download-r2.pytorch.org/whl/cu128/torchvision-0.25.0%2Bcu128-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:12c253520a26483fe3c614f63ff16eca6d9b0b4ebe510699b7d15d88e6c0cd35", upload-time = "2026-01-21T22:32:26Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu128/torchvision-0.25.0%2Bcu128-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:a9c0de893dce9c2913c9c7ae88a916910f92d02b99da149678806d18e8079f29", upload-time = "2026-01-21T22:32:27Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu128/torchvision-0.25.0%2Bcu128-cp313-cp313-win_amd64.whl", hash = "sha256:e2e0317e3861bba1b5aeba7c1cb4bcd50937cf0bffdbea478619d1f5f73e9050", upload-time = "2026-01-21T22:32:27Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu128/torchvision-0.25.0%2Bcu128-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:58b2971b55c761f1d2491bd80fcc4618ea97d363d387a9dd3aff23220cbee264", upload-time = "2026-01-21T22:32:28Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu128/torchvision-0.25.0%2Bcu128-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:1b6878b043513ea3dea1b90bfb5193455d9b248b8c4d5e66ea9f5d1643a43f13", upload-time = "2026-01-21T22:32:29Z" },
-    { url = "https://download-r2.pytorch.org/whl/cu128/torchvision-0.25.0%2Bcu128-cp313-cp313t-win_amd64.whl", hash = "sha256:96cd2ba7b289117873b2a8f4c80605d38118d920b1045f3ce21a9f0ca68a701e", upload-time = "2026-01-21T22:32:30Z" },
 ]
 
 [[package]]
@@ -3085,13 +3111,13 @@ wheels = [
 
 [[package]]
 name = "triton"
-version = "3.6.0"
+version = "3.5.1"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3c/12/34d71b350e89a204c2c7777a9bba0dcf2f19a5bfdd70b57c4dbc5ffd7154/triton-3.6.0-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:448e02fe6dc898e9e5aa89cf0ee5c371e99df5aa5e8ad976a80b93334f3494fd", size = 176133521, upload-time = "2026-01-20T16:16:13.321Z" },
-    { url = "https://files.pythonhosted.org/packages/f9/0b/37d991d8c130ce81a8728ae3c25b6e60935838e9be1b58791f5997b24a54/triton-3.6.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:10c7f76c6e72d2ef08df639e3d0d30729112f47a56b0c81672edc05ee5116ac9", size = 188289450, upload-time = "2026-01-20T16:00:49.136Z" },
-    { url = "https://files.pythonhosted.org/packages/ce/4e/41b0c8033b503fd3cfcd12392cdd256945026a91ff02452bef40ec34bee7/triton-3.6.0-cp313-cp313t-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:1722e172d34e32abc3eb7711d0025bb69d7959ebea84e3b7f7a341cd7ed694d6", size = 176276087, upload-time = "2026-01-20T16:16:18.989Z" },
-    { url = "https://files.pythonhosted.org/packages/35/f8/9c66bfc55361ec6d0e4040a0337fb5924ceb23de4648b8a81ae9d33b2b38/triton-3.6.0-cp313-cp313t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d002e07d7180fd65e622134fbd980c9a3d4211fb85224b56a0a0efbd422ab72f", size = 188400296, upload-time = "2026-01-20T16:00:56.042Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/ba/805684a992ee32d486b7948d36aed2f5e3c643fc63883bf8bdca1c3f3980/triton-3.5.1-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:56765ffe12c554cd560698398b8a268db1f616c120007bfd8829d27139abd24a", size = 159955460, upload-time = "2025-11-11T17:52:01.861Z" },
+    { url = "https://files.pythonhosted.org/packages/27/46/8c3bbb5b0a19313f50edcaa363b599e5a1a5ac9683ead82b9b80fe497c8d/triton-3.5.1-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:f3f4346b6ebbd4fad18773f5ba839114f4826037c9f2f34e0148894cd5dd3dba", size = 170470410, upload-time = "2025-11-11T17:41:06.319Z" },
+    { url = "https://files.pythonhosted.org/packages/84/1e/7df59baef41931e21159371c481c31a517ff4c2517343b62503d0cd2be99/triton-3.5.1-cp313-cp313t-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:02c770856f5e407d24d28ddc66e33cf026e6f4d360dcb8b2fabe6ea1fc758621", size = 160072799, upload-time = "2025-11-11T17:52:07.293Z" },
+    { url = "https://files.pythonhosted.org/packages/37/92/e97fcc6b2c27cdb87ce5ee063d77f8f26f19f06916aa680464c8104ef0f6/triton-3.5.1-cp313-cp313t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:0b4d2c70127fca6a23e247f9348b8adde979d2e7a20391bfbabaac6aebc7e6a8", size = 170579924, upload-time = "2025-11-11T17:41:12.455Z" },
 ]
 
 [[package]]
