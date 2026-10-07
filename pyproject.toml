@@ -5,13 +5,16 @@ description = "Simple audio transcription CLI that uses cutting edge models"
 authors = [{ name = "Can H. Tartanoglu", email = "gpg@rotas.mozmail.com" }]
 requires-python = "==3.13.*"
 
-# Base dependencies (platform-agnostic, no PyTorch or onnxruntime)
+# Base dependencies (platform-agnostic; extras select the PyTorch runtime)
 dependencies = [
   "pyannote.audio",
   # torchcodec wheels don't declare their torch requirement; a mismatched
   # pair aborts at import (op registration). 0.8.x pairs with torch 2.9.x —
   # bump together with the torch pin below.
   "torchcodec>=0.8,<0.9",
+  # These bounds must be published, not just enforced by uv in this checkout.
+  "torch>=2.9.1,<2.10",
+  "torchaudio>=2.9.1,<2.10",
   # Parakeet TDT needs the TDT decoder, which only landed in Transformers 5.x.
   "transformers>=5.0.0",
   "librosa",             # required by transformers' ParakeetFeatureExtractor
@@ -26,37 +29,34 @@ dependencies = [
 
 # NVIDIA CUDA 12.8 - Full GPU acceleration
 nvidia = [
-  "torch>=2.9.1",
-  "torchaudio>=2.9.1",
-  "torchvision>=0.24.1",
+  "torch>=2.9.1,<2.10",
+  "torchaudio>=2.9.1,<2.10",
+  "torchvision>=0.24.1,<0.25",
   "onnxruntime-gpu",
 ]
 
 # AMD ROCm 6.4 - Linux only
 amd = [
-  "torch>=2.9.1",
-  "torchaudio>=2.9.1",
-  "torchvision>=0.24.1",
+  "torch>=2.9.1,<2.10",
+  "torchaudio>=2.9.1,<2.10",
+  "torchvision>=0.24.1,<0.25",
   "onnxruntime",
   "pytorch-triton-rocm>=3.5.1 ; sys_platform == 'linux'",
 ]
 
 # Apple Silicon - MPS acceleration built into PyPI wheels
 apple = [
-  "torch>=2.9.1",
-  "torchaudio>=2.9.1",
-  "torchvision>=0.24.1",
+  "torch>=2.9.1,<2.10",
+  "torchaudio>=2.9.1,<2.10",
+  "torchvision>=0.24.1,<0.25",
   "onnxruntime",
 ]
 
 # CPU only - No GPU acceleration (smaller download)
 cpu = [
-  "torch>=2.9.1",
-  "torchaudio>=2.9.1",
-  # The CPU index also contains a higher-sorting Windows ARM-only local
-  # version. Select the published Linux x86_64 CPU wheel explicitly.
-  "torchvision==0.24.1+cpu ; sys_platform == 'linux' and platform_machine == 'x86_64'",
-  "torchvision>=0.24.1 ; sys_platform != 'linux' or platform_machine != 'x86_64'",
+  "torch>=2.9.1,<2.10",
+  "torchaudio>=2.9.1,<2.10",
+  "torchvision>=0.24.1,<0.25",
   "onnxruntime",
 ]
 
@@ -129,7 +129,10 @@ torchaudio = [
 torchvision = [
   { index = "pytorch-cu128", extra = "nvidia" },
   { index = "pytorch-rocm64", extra = "amd" },
-  { index = "pytorch-cpu", extra = "cpu" },
+  # Keep the index-only local version out of published requirements. Pin the
+  # Linux CPython 3.13 wheel here so uv cannot select the Windows ARM build.
+  { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp313-cp313-manylinux_2_28_x86_64.whl", extra = "cpu", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" },
+  { index = "pytorch-cpu", extra = "cpu", marker = "sys_platform != 'linux' or platform_machine != 'x86_64'" },
 ]
 pytorch-triton-rocm = [{ index = "pytorch-rocm64", extra = "amd" }]
 [tool.uv.extra-build-dependencies]
