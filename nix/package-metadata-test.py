@@ -41,7 +41,7 @@ for platform, machine, wheel_platform in (
     ("linux", "x86_64", "manylinux_2_28_x86_64"),
     ("win32", "AMD64", "win_amd64"),
 ):
-    active = [
+    cpu_sources = [
         source for source in sources
         if source.get("extra") == "cpu" and (
             "marker" not in source or Marker(source["marker"]).evaluate(
@@ -49,5 +49,5 @@ for platform, machine, wheel_platform in (
             )
         )
     ]
-    assert len(active) == 1, (platform, active)
-    assert active[0].get("url", "").endswith(f"%2Bcpu-cp313-cp313-{wheel_platform}.whl"), active
+    assert len(cpu_sources) == 1, (platform, cpu_sources)
+    assert cpu_sources[0].get("url", "").endswith(f"%2Bcpu-cp313-cp313-{wheel_platform}.whl"), cpu_sources
