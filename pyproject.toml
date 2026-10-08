@@ -130,9 +130,10 @@ torchvision = [
   { index = "pytorch-cu128", extra = "nvidia" },
   { index = "pytorch-rocm64", extra = "amd" },
   # Keep the index-only local version out of published requirements. Pin the
-  # Linux CPython 3.13 wheel here so uv cannot select the Windows ARM build.
+  # x86_64 CPython 3.13 wheels here so uv cannot select the Windows ARM build.
   { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp313-cp313-manylinux_2_28_x86_64.whl", extra = "cpu", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" },
-  { index = "pytorch-cpu", extra = "cpu", marker = "sys_platform != 'linux' or platform_machine != 'x86_64'" },
+  { url = "https://download-r2.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp313-cp313-win_amd64.whl", extra = "cpu", marker = "sys_platform == 'win32' and platform_machine == 'AMD64'" },
+  { index = "pytorch-cpu", extra = "cpu", marker = "(sys_platform != 'linux' or platform_machine != 'x86_64') and (sys_platform != 'win32' or platform_machine != 'AMD64')" },
 ]
 pytorch-triton-rocm = [{ index = "pytorch-rocm64", extra = "amd" }]
 [tool.uv.extra-build-dependencies]
