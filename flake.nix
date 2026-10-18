@@ -82,7 +82,7 @@
       torchaudio = py.pythonOverrides.addTorchRuntime python final prev "torchaudio";
       torchcodec = (py.pythonOverrides.addTorchCodecFfmpegRuntime {
           inherit python;
-          ffmpeg = runtime.ffmpeg;
+          inherit (runtime) ffmpeg;
         }
         final
         prev).overrideAttrs (old: {
@@ -144,9 +144,9 @@
             ;
           autoSync = false;
           basePackages = runtime.basePackages ++ [pkgs.mdbook];
-          extraPackages = pre-commit-check.enabledPackages ++ extraPackages;
-          baseLibs = runtime.baseLibs;
-          extraLibs = extraLibs;
+          extraPackages = [treefmtEval.config.build.wrapper] ++ pre-commit-check.enabledPackages ++ extraPackages;
+          inherit (runtime) baseLibs;
+          inherit extraLibs;
           pythonPathEntries = ["${runtime.opencv}/${python.sitePackages}"];
           shellHookSuffix = pre-commit-check.shellHook;
         };
@@ -255,7 +255,7 @@
       treefmtEval = treefmt-nix.lib.evalModule pkgs (import ./nix/treefmt.nix);
       ffmpegAbiCheck = py.mkFfmpegTorchCodecAbiCheck {
         inherit pkgs;
-        ffmpeg = runtime.ffmpeg;
+        inherit (runtime) ffmpeg;
         name = "canscribe-ffmpeg-torchcodec-abi-check";
       };
     in {
