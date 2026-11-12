@@ -104,6 +104,70 @@
       torchvision = py.pythonOverrides.addTorchRuntime python final prev "torchvision";
     };
 
+    # CUDA wheels (torch's +cu128 build and the nvidia-* runtime wheels it
+    # depends on) ship their shared objects under site-packages/nvidia/<component>/lib,
+    # which autoPatchelfHook never searches. Point autoPatchelf at the wheel set
+    # explicitly. libcuda.so.1 is the driver library NixOS mounts at
+    # /run/opengl-driver/lib, so it stays a runtime lookup.
+    mkCudaOverrides = {python}: final: prev: let
+      nvidiaPackages = builtins.filter (name: lib.hasPrefix "nvidia-" name) (builtins.attrNames prev);
+      nvidiaSearchPaths =
+        lib.concatMapStrings (name: ''
+          addAutoPatchelfSearchPath "${final.${name}}/${python.sitePackages}"
+        '')
+        nvidiaPackages;
+      withCudaSearchPaths = searchPaths: drv:
+        drv.overrideAttrs (old: {
+          preFixup = (old.preFixup or "") + searchPaths;
+          autoPatchelfIgnoreMissingDeps =
+            (old.autoPatchelfIgnoreMissingDeps or [])
+            ++ [
+              # NixOS mounts the driver at /run/opengl-driver/lib.
+              "libcuda.so.1"
+              # TensorRT execution provider shipped inside onnxruntime-gpu.
+              # canscribe uses the CUDA provider, and this plugin is only
+              # dlopen'd when TensorRT is selected explicitly.
+              "libnvinfer.so.10"
+              "libnvonnxparser.so.10"
+              # Optional multi-node plugins inside libnvshmem/libcufile
+              # (MPI, SHMEM, UCX, PMIx, libfabric, RDMA); a single-GPU host
+              # never loads them.
+              "libmlx5.so.1"
+              "librdmacm.so.1"
+              "libibverbs.so.1"
+              "libmpi.so.40"
+              "liboshmem.so.40"
+              "libucs.so.0"
+              "libucp.so.0"
+              "libpmix.so.2"
+              "libfabric.so.1"
+            ];
+        });
+      # An nvidia-* wheel cannot search itself or the wheels built on top of it
+      # (that is infinite recursion), so it only searches its own dependencies.
+      withCudaDependencyPaths = drv:
+        withCudaSearchPaths (
+          lib.concatMapStrings (dep: ''
+            addAutoPatchelfSearchPath "${final.${dep}}/${python.sitePackages}"
+          '') (builtins.filter (dep: final ? ${dep}) (builtins.attrNames (drv.passthru.dependencies or {})))
+        )
+        drv;
+    in
+      # torch, torchvision, torchaudio, torchcodec and triton link CUDA
+      # libraries; onnxruntime-gpu's CUDA provider does too, and neither it nor
+      # triton declares the nvidia-* wheels as dependencies.
+      lib.genAttrs
+      (builtins.filter (name: prev ? ${name}) [
+        "onnxruntime-gpu"
+        "torch"
+        "torchaudio"
+        "torchcodec"
+        "torchvision"
+        "triton"
+      ])
+      (name: withCudaSearchPaths nvidiaSearchPaths prev.${name})
+      // lib.genAttrs nvidiaPackages (name: withCudaDependencyPaths prev.${name});
+
     mkDevShells = system: let
       pkgs = py.mkPkgs {inherit system;};
       python = pkgs.python313;
@@ -205,27 +269,32 @@
         };
       };
 
-    mkPythonPackage = system: let
+    mkPythonPackage = extra: system: let
       pkgs = py.mkPkgs {inherit system;};
       python = pkgs.python313;
       runtime = mkRuntime pkgs;
-      cpuDependencySpec = {
-        canscribe = ["cpu"];
-      };
+      isNvidia = extra == "nvidia";
     in
       py.mkUvAppPackage {
         inherit pkgs python;
-        name = "canscribe-cpu";
-        envName = "canscribe-cpu-env";
+        name = "canscribe-${extra}";
+        envName = "canscribe-${extra}-env";
         workspaceRoot = ./.;
-        dependencies = cpuDependencySpec;
+        dependencies = {
+          canscribe = [extra];
+        };
         scripts = [
           "canscribe"
           "ct"
         ];
         runtimePathPackages = [runtime.ffmpeg];
-        runtimeLibraryPackages = runtime.baseLibs;
+        # libcuda.so.1 lives on the host, not in the store, so the CUDA build
+        # resolves it through the NixOS driver link.
+        runtimeLibraryPackages =
+          runtime.baseLibs
+          ++ lib.optionals isNvidia [pkgs.addDriverRunpath.driverLink];
         pyprojectOverrides = mkPyprojectOverrides {inherit pkgs python runtime;};
+        extraOverlays = lib.optionals isNvidia [(mkCudaOverrides {inherit python;})];
       };
 
     mkPythonCheckEnv = system: let
@@ -319,26 +388,37 @@
 
     packages = py.forPackageSystems (
       system: let
-        canscribeCpu = mkPythonPackage system;
+        canscribeCpu = mkPythonPackage "cpu" system;
         docs = mkDocs system;
-      in {
-        canscribe-cpu = canscribeCpu;
-        inherit docs;
-        site = docs;
-        default = canscribeCpu;
-      }
+      in
+        {
+          canscribe-cpu = canscribeCpu;
+          inherit docs;
+          site = docs;
+          default = canscribeCpu;
+        }
+        // lib.optionalAttrs (system == "x86_64-linux") {
+          canscribe-nvidia = mkPythonPackage "nvidia" system;
+        }
     );
 
     apps = py.forPackageSystems (
       system: let
         canscribeCpu = self.packages.${system}.canscribe-cpu;
-      in {
-        canscribe-cpu = {
-          type = "app";
-          program = "${canscribeCpu}/bin/canscribe";
-        };
-        default = self.apps.${system}.canscribe-cpu;
-      }
+      in
+        {
+          canscribe-cpu = {
+            type = "app";
+            program = "${canscribeCpu}/bin/canscribe";
+          };
+          default = self.apps.${system}.canscribe-cpu;
+        }
+        // lib.optionalAttrs (system == "x86_64-linux") {
+          canscribe-nvidia = {
+            type = "app";
+            program = "${self.packages.${system}.canscribe-nvidia}/bin/canscribe";
+          };
+        }
     );
 
     formatter = py.forAllSystems (
