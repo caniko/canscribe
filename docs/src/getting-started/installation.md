@@ -9,6 +9,15 @@
 
 GPU acceleration is recommended. The project defines platform extras for NVIDIA CUDA 12.8, AMD ROCm 6.4, Apple Silicon MPS, and CPU-only operation.
 
+## Nix Package
+
+```sh
+nix build .#canscribe-nvidia   # CUDA 12.8 wheels; needs the NVIDIA driver on NixOS
+nix build .#canscribe-cpu      # CPU-only wheels
+```
+
+The NVIDIA package takes `libcuda.so.1` from `/run/opengl-driver/lib` at runtime and bundles no driver.
+
 ## Nix Development Shell
 
 From the repository root:

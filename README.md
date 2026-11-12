@@ -11,6 +11,8 @@ canscribe ~/Videos/meeting.mp4
 
 The transcript is written next to the input media as `transcript-<filename>.txt`.
 
+Prefer a packaged build? `nix build .#canscribe-nvidia` (CUDA) or `nix build .#canscribe-cpu` gives a self-contained `./result/bin/canscribe`.
+
 Read the [documentation](https://caniko.codeberg.page/canscribe/) for installation, platform setup, CLI options, diagnostics, visual analysis, and development workflows.
 
 ## Requirements
